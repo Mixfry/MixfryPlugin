@@ -36,6 +36,11 @@ public class MixfryPlugin extends JavaPlugin {
         return false;
     }
 
+    public void updatePlayerCookies(Player player, int cookies) {
+        PlayerData playerData = new PlayerData(player);
+        playerData.setCookieCount(cookies);
+    }
+
     @Override
     public void onDisable() {
         // Disable logic here if needed
