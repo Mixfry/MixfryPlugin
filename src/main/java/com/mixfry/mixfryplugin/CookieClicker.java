@@ -19,6 +19,7 @@ public class CookieClicker implements Listener {
 
     private final String chestGuiTitle = "Cookie Clicker";
     private static final int COST_MULTIPLIER = 25;
+    private static final double GRANDMA_COST_MULTIPLIER = 1.25;
     private Map<UUID, PlayerData> playerDataMap = new HashMap<>();
 
     public CookieClicker() {
@@ -42,9 +43,11 @@ public class CookieClicker implements Listener {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     PlayerData data = getPlayerData(player);
                     data.updateRanking();
+                    data.incrementCookiesPerSecond();
                     if (player.getOpenInventory().getTitle().equals(chestGuiTitle)) {
                         updateCookieItem(player);
                         updateRankingItem(player);
+                        updateGrandmaItem(player);
                     }
                 }
             }
@@ -59,6 +62,7 @@ public class CookieClicker implements Listener {
         Inventory inventory = Bukkit.createInventory(null, 54, chestGuiTitle);
         inventory.setItem(13, createCookieItem(player));
         inventory.setItem(27, createGiantHandItem(player));
+        inventory.setItem(36, createGrandmaItem(player)); // ここを確認
         inventory.setItem(53, createRankingItem(player));
 
         ItemStack fillerGlass = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
@@ -91,27 +95,51 @@ public class CookieClicker implements Listener {
     }
 
     private ItemStack createGiantHandItem(Player player) {
-    PlayerData data = getPlayerData(player);
-    ItemStack giantHand = new ItemStack(Material.GOLD_INGOT, data.getGiantHandLevel());
-    ItemMeta meta = giantHand.getItemMeta();
+        PlayerData data = getPlayerData(player);
+        ItemStack giantHand = new ItemStack(Material.GOLD_INGOT, data.getGiantHandLevel());
+        ItemMeta meta = giantHand.getItemMeta();
 
-    meta.setDisplayName(ChatColor.LIGHT_PURPLE + "Giant Hand " + getRomanNumerals(data.getGiantHandLevel()));
-    int nextCookiesPerClick = data.getCookiesPerClick() + 1;
-    int cost = (int) (25 * Math.pow(1.5, data.getGiantHandLevel() - 1));
+        meta.setDisplayName(ChatColor.LIGHT_PURPLE + "Giant Hand " + getRomanNumerals(data.getGiantHandLevel()));
+        int nextCookiesPerClick = data.getCookiesPerClick() + 1;
+        int cost = (int) (25 * Math.pow(1.5, data.getGiantHandLevel() - 1));
+        meta.setLore(Arrays.asList(
+                ChatColor.GRAY + "Cookie Per Click: +" + ChatColor.GOLD + data.getCookiesPerClick() + " Cookie",
+                ChatColor.GREEN + "UPGRADE" + ChatColor.DARK_GRAY + "→" + ChatColor.LIGHT_PURPLE + "Giant Hand " + getRomanNumerals(data.getGiantHandLevel() + 1),
+                ChatColor.DARK_GRAY + "+" + data.getCookiesPerClick() + " Cookie per click",
+                ChatColor.GOLD + "+" + nextCookiesPerClick + " Cookie per click",
+                "",
+                ChatColor.GRAY + "Cost",
+                ChatColor.GOLD + data.formatNumber(cost) + " Cookie",
+                "",
+                ChatColor.YELLOW + "Click to upgrade!"
+        ));
+        giantHand.setItemMeta(meta);
+
+        return giantHand;
+    }
+
+    private ItemStack createGrandmaItem(Player player) {
+    PlayerData data = getPlayerData(player);
+    ItemStack grandma = new ItemStack(Material.CAKE, data.getGrandmaLevel());
+    ItemMeta meta = grandma.getItemMeta();
+
+    meta.setDisplayName(ChatColor.LIGHT_PURPLE + "Grandma [" + data.getGrandmaLevel() + "]");
+    int nextCookiesPerSecond = data.getCookiesPerSecond() + 1;
+    int cost = (int) (50 * Math.pow(GRANDMA_COST_MULTIPLIER, data.getGrandmaLevel()));
     meta.setLore(Arrays.asList(
-            ChatColor.GRAY + "Cookie Per Click: +" + ChatColor.GOLD + data.getCookiesPerClick() + " Cookie",
-            ChatColor.GREEN + "UPGRADE" + ChatColor.DARK_GRAY + "→" + ChatColor.LIGHT_PURPLE + "Giant Hand " + getRomanNumerals(data.getGiantHandLevel() + 1),
-            ChatColor.DARK_GRAY + "+" + data.getCookiesPerClick() + " Cookie per click",
-            ChatColor.GOLD + "+" + nextCookiesPerClick + " Cookie per click",
+            ChatColor.GRAY + "Cookie Per Second: +" + ChatColor.GOLD + data.getCookiesPerSecond() + " Cookie",
+            ChatColor.GREEN + "UPGRADE" + ChatColor.DARK_GRAY + "→" + ChatColor.LIGHT_PURPLE + "Grandma [" + (data.getGrandmaLevel() + 1) + "]",
+            ChatColor.DARK_GRAY + "+" + data.getCookiesPerSecond() + " Cookie per second",
+            ChatColor.GOLD + "+" + nextCookiesPerSecond + " Cookie per second",
             "",
             ChatColor.GRAY + "Cost",
             ChatColor.GOLD + data.formatNumber(cost) + " Cookie",
             "",
             ChatColor.YELLOW + "Click to upgrade!"
     ));
-    giantHand.setItemMeta(meta);
+    grandma.setItemMeta(meta);
 
-    return giantHand;
+    return grandma;
 }
 
     private ItemStack createRankingItem(Player player) {
@@ -175,6 +203,14 @@ public class CookieClicker implements Listener {
         }
     }
 
+    private void updateGrandmaItem(Player player) {
+        Inventory inventory = player.getOpenInventory().getTopInventory();
+        if (inventory.getItem(36) != null && inventory.getItem(36).getType() == Material.CAKE) {
+            ItemStack grandmaItem = createGrandmaItem(player);
+            inventory.setItem(36, grandmaItem);
+        }
+    }
+
     private void updateRankingItem(Player player) {
         Inventory inventory = player.getOpenInventory().getTopInventory();
         if (inventory.getItem(53) != null && inventory.getItem(53).getType() == Material.WHEAT) {
@@ -225,6 +261,17 @@ public class CookieClicker implements Listener {
                         }
                         break;
 
+                    case CAKE:
+                        if (data.upgradeGrandma()) {
+                            player.sendMessage(ChatColor.GREEN + "Grandma upgraded to [" + data.getGrandmaLevel() + "]!");
+                            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                            updateGrandmaItem(player);
+                        } else {
+                            player.sendMessage(ChatColor.RED + "Not enough cookies to upgrade!");
+                            player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+                        }
+                        break;
+
                     case WHEAT:
                         player.sendMessage(ChatColor.GREEN + "更新中...");
                         savePlayerData(player);
@@ -243,6 +290,8 @@ public class CookieClicker implements Listener {
     public void onInventoryClose(InventoryCloseEvent event) {
         if (event.getView().getTitle().equals(chestGuiTitle)) {
             Player player = (Player) event.getPlayer();
+            PlayerData data = getPlayerData(player);
+            data.setLastCloseTime(System.currentTimeMillis());
             savePlayerData(player);
         }
     }

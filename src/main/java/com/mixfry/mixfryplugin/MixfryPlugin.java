@@ -15,6 +15,7 @@ public class MixfryPlugin extends JavaPlugin {
         instance = this;
         new DeathPoint();
         new Cords();
+        new DurabilityAlert();
         cookieClicker = new CookieClicker();
     }
 

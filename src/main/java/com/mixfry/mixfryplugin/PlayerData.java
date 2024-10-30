@@ -14,6 +14,9 @@ public class PlayerData {
     private int allTimeCookies;
     private int giantHandLevel;
     private int cookiesPerClick;
+    private int grandmaLevel;
+    private int cookiesPerSecond;
+    private long lastCloseTime;
 
     public PlayerData(Player player) {
         this.player = player;
@@ -35,6 +38,9 @@ public class PlayerData {
         allTimeCookies = dataConfig.getInt("allTimeCookies", 0);
         giantHandLevel = dataConfig.getInt("giantHandLevel", 1);
         cookiesPerClick = dataConfig.getInt("cookiesPerClick", 1);
+        grandmaLevel = dataConfig.getInt("grandmaLevel", 0);
+        cookiesPerSecond = dataConfig.getInt("cookiesPerSecond", 0);
+        lastCloseTime = dataConfig.getLong("lastCloseTime", System.currentTimeMillis());
     }
 
     public void saveData() {
@@ -42,6 +48,9 @@ public class PlayerData {
         dataConfig.set("allTimeCookies", allTimeCookies);
         dataConfig.set("giantHandLevel", giantHandLevel);
         dataConfig.set("cookiesPerClick", cookiesPerClick);
+        dataConfig.set("grandmaLevel", grandmaLevel);
+        dataConfig.set("cookiesPerSecond", cookiesPerSecond);
+        dataConfig.set("lastCloseTime", lastCloseTime);
         try {
             dataConfig.save(dataFile);
         } catch (IOException e) {
@@ -65,6 +74,18 @@ public class PlayerData {
         return cookiesPerClick;
     }
 
+    public int getGrandmaLevel() {
+        return grandmaLevel;
+    }
+
+    public int getCookiesPerSecond() {
+        return cookiesPerSecond;
+    }
+
+    public long getLastCloseTime() {
+        return lastCloseTime;
+    }
+
     public void setCookieCount(int cookieCount) {
         this.cookieCount = cookieCount;
     }
@@ -83,6 +104,26 @@ public class PlayerData {
             return true;
         }
         return false;
+    }
+
+    public boolean upgradeGrandma() {
+        int cost = (int) (50 * Math.pow(1.25, grandmaLevel));
+        if (cookieCount >= cost) {
+            cookieCount -= cost;
+            grandmaLevel++;
+            cookiesPerSecond++;
+            return true;
+        }
+        return false;
+    }
+
+    public void incrementCookiesPerSecond() {
+        cookieCount += cookiesPerSecond;
+        allTimeCookies += cookiesPerSecond;
+    }
+
+    public void setLastCloseTime(long lastCloseTime) {
+        this.lastCloseTime = lastCloseTime;
     }
 
     public void updateRanking() {
