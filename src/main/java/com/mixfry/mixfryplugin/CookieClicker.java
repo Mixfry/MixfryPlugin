@@ -4,59 +4,35 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 public class CookieClicker implements Listener {
 
     private final String chestGuiTitle = "Cookie Clicker";
-    private int cookieCount = 0;
-    private int allTimeCookies = 0;
-    private int giantHandLevel = 1;
-    private int cookiesPerClick = 1;
-    private static final int COST_MULTIPLIER = 500;
-    private Map<String, FileConfiguration> playerData = new HashMap<>();
+    private static final int COST_MULTIPLIER = 25;
+    private Map<UUID, PlayerData> playerDataMap = new HashMap<>();
 
     public CookieClicker() {
         Bukkit.getPluginManager().registerEvents(this, MixfryPlugin.getInstance());
         startCookieGenerationTask();
     }
 
-    private FileConfiguration loadPlayerData(Player player) {
-        File playerFile = new File(MixfryPlugin.getInstance().getDataFolder(), player.getUniqueId() + ".yml");
-        if (!playerFile.exists()) {
-            try {
-                playerFile.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return YamlConfiguration.loadConfiguration(playerFile);
+    private PlayerData getPlayerData(Player player) {
+        return playerDataMap.computeIfAbsent(player.getUniqueId(), k -> new PlayerData(player));
     }
 
     private void savePlayerData(Player player) {
-        File playerFile = new File(MixfryPlugin.getInstance().getDataFolder(), player.getUniqueId() + ".yml");
-        FileConfiguration config = YamlConfiguration.loadConfiguration(playerFile);
-        config.set("cookieCount", cookieCount);
-        config.set("allTimeCookies", allTimeCookies);
-        config.set("giantHandLevel", giantHandLevel);
-        config.set("cookiesPerClick", cookiesPerClick);
-        try {
-            config.save(playerFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        PlayerData data = getPlayerData(player);
+        data.saveData();
     }
 
     private void startCookieGenerationTask() {
@@ -64,15 +40,8 @@ public class CookieClicker implements Listener {
             @Override
             public void run() {
                 for (Player player : Bukkit.getOnlinePlayers()) {
-                    FileConfiguration config = loadPlayerData(player);
-                    cookieCount = config.getInt("cookieCount", 0);
-                    allTimeCookies = config.getInt("allTimeCookies", 0);
-                    giantHandLevel = config.getInt("giantHandLevel", 1);
-                    cookiesPerClick = config.getInt("cookiesPerClick", 1);
-
-                    updateRanking(player);
-                    savePlayerData(player);
-
+                    PlayerData data = getPlayerData(player);
+                    data.updateRanking();
                     if (player.getOpenInventory().getTitle().equals(chestGuiTitle)) {
                         updateCookieItem(player);
                         updateRankingItem(player);
@@ -83,14 +52,14 @@ public class CookieClicker implements Listener {
     }
 
     public void openCookieInventory(Player player) {
-        player.openInventory(createCookieInventory());
+        player.openInventory(createCookieInventory(player));
     }
 
-    private Inventory createCookieInventory() {
+    private Inventory createCookieInventory(Player player) {
         Inventory inventory = Bukkit.createInventory(null, 54, chestGuiTitle);
-        inventory.setItem(13, createCookieItem());
-        inventory.setItem(27, createGiantHandItem());
-        inventory.setItem(53, createRankingItem());
+        inventory.setItem(13, createCookieItem(player));
+        inventory.setItem(27, createGiantHandItem(player));
+        inventory.setItem(53, createRankingItem(player));
 
         ItemStack fillerGlass = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = fillerGlass.getItemMeta();
@@ -105,119 +74,129 @@ public class CookieClicker implements Listener {
         return inventory;
     }
 
-    private ItemStack createCookieItem() {
+    private ItemStack createCookieItem(Player player) {
+        PlayerData data = getPlayerData(player);
         ItemStack cookie = new ItemStack(Material.COOKIE);
         ItemMeta meta = cookie.getItemMeta();
-        meta.setDisplayName(ChatColor.YELLOW + "" + cookieCount + ChatColor.GOLD + " Cookie");
+        meta.setDisplayName(ChatColor.YELLOW + "" + data.formatNumber(data.getCookieCount()) + ChatColor.GOLD + " Cookie");
 
         meta.setLore(Arrays.asList(
                 ChatColor.GRAY + "Cookie Production",
                 ChatColor.GOLD + "0" + ChatColor.DARK_GRAY + " per second",
-                ChatColor.GRAY + "All-Time Cookie: " + ChatColor.GOLD + allTimeCookies
+                ChatColor.GRAY + "All-Time Cookie: " + ChatColor.GOLD + data.formatNumber(data.getAllTimeCookies())
         ));
         cookie.setItemMeta(meta);
 
         return cookie;
     }
 
-    private ItemStack createGiantHandItem() {
-        ItemStack giantHand = new ItemStack(Material.GOLD_INGOT, giantHandLevel);
-        ItemMeta meta = giantHand.getItemMeta();
+    private ItemStack createGiantHandItem(Player player) {
+    PlayerData data = getPlayerData(player);
+    ItemStack giantHand = new ItemStack(Material.GOLD_INGOT, data.getGiantHandLevel());
+    ItemMeta meta = giantHand.getItemMeta();
 
-        meta.setDisplayName(ChatColor.LIGHT_PURPLE + "Giant Hand " + getRomanNumerals(giantHandLevel));
-        int nextCookiesPerClick = cookiesPerClick + 1;
-        meta.setLore(Arrays.asList(
-                ChatColor.GRAY + "Cookie Per Click: +" + ChatColor.GOLD + cookiesPerClick + " Cookie",
-                ChatColor.GREEN + "UPGRADE" + ChatColor.DARK_GRAY + "→" + ChatColor.LIGHT_PURPLE + "Giant Hand " + getRomanNumerals(giantHandLevel + 1),
-                ChatColor.DARK_GRAY + "+" + cookiesPerClick + " Cookie per click",
-                ChatColor.GOLD + "+" + nextCookiesPerClick + " Cookie per click",
-                "",
-                ChatColor.GRAY + "Cost",
-                ChatColor.GOLD + String.valueOf(giantHandLevel * COST_MULTIPLIER) + " Cookie",
-                "",
-                ChatColor.YELLOW + "Click to upgrade!"
-        ));
-        giantHand.setItemMeta(meta);
+    meta.setDisplayName(ChatColor.LIGHT_PURPLE + "Giant Hand " + getRomanNumerals(data.getGiantHandLevel()));
+    int nextCookiesPerClick = data.getCookiesPerClick() + 1;
+    int cost = (int) (25 * Math.pow(1.5, data.getGiantHandLevel() - 1));
+    meta.setLore(Arrays.asList(
+            ChatColor.GRAY + "Cookie Per Click: +" + ChatColor.GOLD + data.getCookiesPerClick() + " Cookie",
+            ChatColor.GREEN + "UPGRADE" + ChatColor.DARK_GRAY + "→" + ChatColor.LIGHT_PURPLE + "Giant Hand " + getRomanNumerals(data.getGiantHandLevel() + 1),
+            ChatColor.DARK_GRAY + "+" + data.getCookiesPerClick() + " Cookie per click",
+            ChatColor.GOLD + "+" + nextCookiesPerClick + " Cookie per click",
+            "",
+            ChatColor.GRAY + "Cost",
+            ChatColor.GOLD + data.formatNumber(cost) + " Cookie",
+            "",
+            ChatColor.YELLOW + "Click to upgrade!"
+    ));
+    giantHand.setItemMeta(meta);
 
-        return giantHand;
-    }
+    return giantHand;
+}
 
-    private ItemStack createRankingItem() {
+    private ItemStack createRankingItem(Player player) {
         ItemStack wheat = new ItemStack(Material.WHEAT);
         ItemMeta meta = wheat.getItemMeta();
         meta.setDisplayName(ChatColor.AQUA + "Cookie Clicker Ranking");
 
         List<Map.Entry<String, Integer>> sortedPlayers = new ArrayList<>();
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            FileConfiguration config = loadPlayerData(player);
-            int playerAllTimeCookies = config.getInt("allTimeCookies", 0);
-            sortedPlayers.add(new AbstractMap.SimpleEntry<>(player.getName(), playerAllTimeCookies));
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            PlayerData data = getPlayerData(onlinePlayer);
+            sortedPlayers.add(new AbstractMap.SimpleEntry<>(onlinePlayer.getName(), data.getAllTimeCookies()));
         }
 
         sortedPlayers.sort(Map.Entry.<String, Integer>comparingByValue().reversed());
 
         List<String> lore = new ArrayList<>();
         if (sortedPlayers.size() > 0) {
-            lore.add(ChatColor.GOLD + "#1 " + sortedPlayers.get(0).getKey() + " " + sortedPlayers.get(0).getValue());
+            lore.add(ChatColor.GOLD + "#1 " + sortedPlayers.get(0).getKey() + " " + getPlayerData(player).formatNumber(sortedPlayers.get(0).getValue()));
         }
         if (sortedPlayers.size() > 1) {
-            lore.add(ChatColor.YELLOW + "#2 " + sortedPlayers.get(1).getKey() + " " + sortedPlayers.get(1).getValue());
+            lore.add(ChatColor.YELLOW + "#2 " + sortedPlayers.get(1).getKey() + " " + getPlayerData(player).formatNumber(sortedPlayers.get(1).getValue()));
         }
         if (sortedPlayers.size() > 2) {
-            lore.add(ChatColor.GOLD + "#3 " + sortedPlayers.get(2).getKey() + " " + sortedPlayers.get(2).getValue());
+            lore.add(ChatColor.GOLD + "#3 " + sortedPlayers.get(2).getKey() + " " + getPlayerData(player).formatNumber(sortedPlayers.get(2).getValue()));
         }
 
         lore.add("");
-        Player player = Bukkit.getPlayer(Bukkit.getOnlinePlayers().iterator().next().getName());
-        int playerRank = sortedPlayers.indexOf(new AbstractMap.SimpleEntry<>(player.getName(), allTimeCookies)) + 1;
+        PlayerData data = getPlayerData(player);
+        int playerRank = -1;
+        for (int i = 0; i < sortedPlayers.size(); i++) {
+            if (sortedPlayers.get(i).getKey().equals(player.getName())) {
+                playerRank = i + 1;
+                break;
+            }
+        }
 
-        lore.add("#" + playerRank + " " + player.getName() + " " + allTimeCookies);
+        if (playerRank != -1) {
+            lore.add("#" + playerRank + " " + player.getName() + " " + data.formatNumber(data.getAllTimeCookies()));
+        } else {
+            lore.add(ChatColor.RED + "Rank not found");
+        }
 
         meta.setLore(lore);
         wheat.setItemMeta(meta);
         return wheat;
     }
 
-    private void updateRanking(Player player) {
-        FileConfiguration config = loadPlayerData(player);
-        allTimeCookies = config.getInt("allTimeCookies", 0);
-        config.set("allTimeCookies", allTimeCookies);
-        savePlayerData(player);
+    private void updateCookieItem(Player player) {
+        Inventory inventory = player.getOpenInventory().getTopInventory();
+        if (inventory.getItem(13) != null && inventory.getItem(13).getType() == Material.COOKIE) {
+            ItemStack cookieItem = createCookieItem(player);
+            inventory.setItem(13, cookieItem);
+        }
+    }
+
+    private void updateGiantHandItem(Player player) {
+        Inventory inventory = player.getOpenInventory().getTopInventory();
+        if (inventory.getItem(27) != null && inventory.getItem(27).getType() == Material.GOLD_INGOT) {
+            ItemStack giantHandItem = createGiantHandItem(player);
+            inventory.setItem(27, giantHandItem);
+        }
     }
 
     private void updateRankingItem(Player player) {
         Inventory inventory = player.getOpenInventory().getTopInventory();
         if (inventory.getItem(53) != null && inventory.getItem(53).getType() == Material.WHEAT) {
-            ItemStack rankingItem = createRankingItem();
+            ItemStack rankingItem = createRankingItem(player);
             inventory.setItem(53, rankingItem);
         }
     }
 
     private String getRomanNumerals(int level) {
-        switch (level) {
-            case 1:
-                return "I";
-            case 2:
-                return "II";
-            case 3:
-                return "III";
-            case 4:
-                return "IV";
-            case 5:
-                return "V";
-            case 6:
-                return "VI";
-            case 7:
-                return "VII";
-            case 8:
-                return "VIII";
-            case 9:
-                return "IX";
-            case 10:
-                return "X";
-            default:
-                return String.valueOf(level);
+        int[] values = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
+        String[] numerals = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
+
+        StringBuilder result = new StringBuilder();
+
+        for (int i = 0; i < values.length; i++) {
+            while (level >= values[i]) {
+                level -= values[i];
+                result.append(numerals[i]);
+            }
         }
+
+        return result.toString();
     }
 
     @EventHandler
@@ -225,33 +204,19 @@ public class CookieClicker implements Listener {
         if (event.getView().getTitle().equals(chestGuiTitle)) {
             event.setCancelled(true);
             Player player = (Player) event.getWhoClicked();
-
-            FileConfiguration config = loadPlayerData(player);
-            cookieCount = config.getInt("cookieCount", 0);
-            allTimeCookies = config.getInt("allTimeCookies", 0);
-            giantHandLevel = config.getInt("giantHandLevel", 1);
-            cookiesPerClick = config.getInt("cookiesPerClick", 1);
+            PlayerData data = getPlayerData(player);
 
             if (event.getCurrentItem() != null) {
                 switch (event.getCurrentItem().getType()) {
                     case COOKIE:
-                        cookieCount += cookiesPerClick;
-                        allTimeCookies += cookiesPerClick;
-                        config.set("cookieCount", cookieCount);
+                        data.incrementCookieCount();
                         player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
                         updateCookieItem(player);
                         break;
 
                     case GOLD_INGOT:
-                        int cost = giantHandLevel * COST_MULTIPLIER;
-                        if (cookieCount >= cost) {
-                            cookieCount -= cost;
-                            giantHandLevel++;
-                            cookiesPerClick++;
-                            config.set("cookieCount", cookieCount);
-                            config.set("giantHandLevel", giantHandLevel);
-                            config.set("cookiesPerClick", cookiesPerClick);
-                            player.sendMessage(ChatColor.GREEN + "Giant Hand upgraded to " + getRomanNumerals(giantHandLevel) + "!");
+                        if (data.upgradeGiantHand()) {
+                            player.sendMessage(ChatColor.GREEN + "Giant Hand upgraded to " + getRomanNumerals(data.getGiantHandLevel()) + "!");
                             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
                             updateGiantHandItem(player);
                         } else {
@@ -261,7 +226,8 @@ public class CookieClicker implements Listener {
                         break;
 
                     case WHEAT:
-                        player.sendMessage(ChatColor.AQUA + "Ranking: " + player.getName() + " " + allTimeCookies);
+                        player.sendMessage(ChatColor.GREEN + "更新中...");
+                        savePlayerData(player);
                         break;
 
                     default:
@@ -269,24 +235,15 @@ public class CookieClicker implements Listener {
                 }
             }
 
-            savePlayerData(player);
             updateRankingItem(player);
         }
     }
 
-    private void updateCookieItem(Player player) {
-        Inventory inventory = player.getOpenInventory().getTopInventory();
-        if (inventory.getItem(13) != null && inventory.getItem(13).getType() == Material.COOKIE) {
-            ItemStack cookieItem = createCookieItem();
-            inventory.setItem(13, cookieItem);
-        }
-    }
-
-    private void updateGiantHandItem(Player player) {
-        Inventory inventory = player.getOpenInventory().getTopInventory();
-        if (inventory.getItem(27) != null && inventory.getItem(27).getType() == Material.GOLD_INGOT) {
-            ItemStack giantHandItem = createGiantHandItem();
-            inventory.setItem(27, giantHandItem);
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (event.getView().getTitle().equals(chestGuiTitle)) {
+            Player player = (Player) event.getPlayer();
+            savePlayerData(player);
         }
     }
 }

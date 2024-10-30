@@ -10,6 +10,10 @@ public class PlayerData {
     private final Player player;
     private final File dataFile;
     private FileConfiguration dataConfig;
+    private int cookieCount;
+    private int allTimeCookies;
+    private int giantHandLevel;
+    private int cookiesPerClick;
 
     public PlayerData(Player player) {
         this.player = player;
@@ -27,9 +31,17 @@ public class PlayerData {
             }
         }
         dataConfig = YamlConfiguration.loadConfiguration(dataFile);
+        cookieCount = dataConfig.getInt("cookieCount", 0);
+        allTimeCookies = dataConfig.getInt("allTimeCookies", 0);
+        giantHandLevel = dataConfig.getInt("giantHandLevel", 1);
+        cookiesPerClick = dataConfig.getInt("cookiesPerClick", 1);
     }
 
     public void saveData() {
+        dataConfig.set("cookieCount", cookieCount);
+        dataConfig.set("allTimeCookies", allTimeCookies);
+        dataConfig.set("giantHandLevel", giantHandLevel);
+        dataConfig.set("cookiesPerClick", cookiesPerClick);
         try {
             dataConfig.save(dataFile);
         } catch (IOException e) {
@@ -38,50 +50,46 @@ public class PlayerData {
     }
 
     public int getCookieCount() {
-        return dataConfig.getInt("cookieCount", 0);
-    }
-
-    public void setCookieCount(int count) {
-        dataConfig.set("cookieCount", count);
-        saveData();
-        updateGlobalRanking(count);
+        return cookieCount;
     }
 
     public int getAllTimeCookies() {
-        return dataConfig.getInt("allTimeCookies", 0);
-    }
-
-    public void setAllTimeCookies(int count) {
-        dataConfig.set("allTimeCookies", count);
-        saveData();
+        return allTimeCookies;
     }
 
     public int getGiantHandLevel() {
-        return dataConfig.getInt("giantHandLevel", 1);
-    }
-
-    public void setGiantHandLevel(int level) {
-        dataConfig.set("giantHandLevel", level);
-        saveData();
+        return giantHandLevel;
     }
 
     public int getCookiesPerClick() {
-        return dataConfig.getInt("cookiesPerClick", 1);
+        return cookiesPerClick;
     }
 
-    public void setCookiesPerClick(int count) {
-        dataConfig.set("cookiesPerClick", count);
-        saveData();
+    public void setCookieCount(int cookieCount) {
+        this.cookieCount = cookieCount;
     }
 
-    private void updateGlobalRanking(int cookiesEarned) {
+    public void incrementCookieCount() {
+        cookieCount += cookiesPerClick;
+        allTimeCookies += cookiesPerClick;
+    }
+
+    public boolean upgradeGiantHand() {
+        int cost = (int) (25 * Math.pow(1.5, giantHandLevel - 1));
+        if (cookieCount >= cost) {
+            cookieCount -= cost;
+            giantHandLevel++;
+            cookiesPerClick++;
+            return true;
+        }
+        return false;
+    }
+
+    public void updateRanking() {
         File rankingsFile = new File(MixfryPlugin.getInstance().getDataFolder(), "rankings.yml");
         FileConfiguration rankingsConfig = YamlConfiguration.loadConfiguration(rankingsFile);
 
-        int totalCookies = getAllTimeCookies() + cookiesEarned;
-        setAllTimeCookies(totalCookies);
-
-        rankingsConfig.set(player.getName(), totalCookies);
+        rankingsConfig.set(player.getName(), allTimeCookies);
 
         try {
             rankingsConfig.save(rankingsFile);
@@ -90,9 +98,21 @@ public class PlayerData {
         }
     }
 
-    public void removeData() {
-        if (dataFile.exists()) {
-            dataFile.delete();
+    public String formatNumber(int number) {
+        if (number >= 1_000_000_000_000_000_000L) {
+            return String.format("%.2fQi", number / 1_000_000_000_000_000_000.0);
+        } else if (number >= 1_000_000_000_000_000L) {
+            return String.format("%.2fQa", number / 1_000_000_000_000_000.0);
+        } else if (number >= 1_000_000_000_000L) {
+            return String.format("%.2fT", number / 1_000_000_000_000.0);
+        } else if (number >= 1_000_000_000L) {
+            return String.format("%.2fB", number / 1_000_000_000.0);
+        } else if (number >= 1_000_000L) {
+            return String.format("%.2fm", number / 1_000_000.0);
+        } else if (number >= 1_000L) {
+            return String.format("%.2fk", number / 1_000.0);
+        } else {
+            return String.valueOf(number);
         }
     }
 }

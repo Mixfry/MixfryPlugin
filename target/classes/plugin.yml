@@ -6,3 +6,5 @@ commands:
   cookie_clicker:
     description: クッキークリッカーのメニューを開く
     aliases: [ cc ]
+  cords:
+    description: 現在の座標を表示する

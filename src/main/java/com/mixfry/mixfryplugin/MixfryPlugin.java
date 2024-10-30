@@ -14,6 +14,7 @@ public class MixfryPlugin extends JavaPlugin {
     public void onEnable() {
         instance = this;
         new DeathPoint();
+        new Cords();
         cookieClicker = new CookieClicker();
     }
 
@@ -31,6 +32,11 @@ public class MixfryPlugin extends JavaPlugin {
         Player player = (Player) sender;
         if (label.equalsIgnoreCase("cookie_clicker") || label.equalsIgnoreCase("cc")) {
             cookieClicker.openCookieInventory(player);
+            return true;
+        }
+
+        if (label.equalsIgnoreCase("cords")) {
+            new Cords().ShareCords(player);
             return true;
         }
         return false;
