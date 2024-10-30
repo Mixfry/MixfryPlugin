@@ -15,8 +15,11 @@ public class MixfryPlugin extends JavaPlugin {
         instance = this;
         new DeathPoint();
         new Cords();
-        new DurabilityAlert();
+        new ToolExtention();
         cookieClicker = new CookieClicker();
+        for (Player player : getServer().getOnlinePlayers()) {
+            new PlayerData(player);
+        }
     }
 
     public static MixfryPlugin getInstance() {
@@ -50,6 +53,9 @@ public class MixfryPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Disable logic here if needed
+        for (Player player : getServer().getOnlinePlayers()) {
+            PlayerData playerData = new PlayerData(player);
+            playerData.saveData();
+        }
     }
 }

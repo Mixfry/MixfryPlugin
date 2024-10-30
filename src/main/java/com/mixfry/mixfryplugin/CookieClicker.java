@@ -62,8 +62,20 @@ public class CookieClicker implements Listener {
         Inventory inventory = Bukkit.createInventory(null, 54, chestGuiTitle);
         inventory.setItem(13, createCookieItem(player));
         inventory.setItem(27, createGiantHandItem(player));
-        inventory.setItem(36, createGrandmaItem(player)); // ここを確認
+        inventory.setItem(36, createGrandmaItem(player));
+        inventory.setItem(37, createFarmItem(player));
+        inventory.setItem(38, createMineItem(player));
+        inventory.setItem(39, createFactoryItem(player));
         inventory.setItem(53, createRankingItem(player));
+
+        ItemStack barrierBlock = new ItemStack(Material.BARRIER);
+        ItemMeta barrierMeta = barrierBlock.getItemMeta();
+        barrierMeta.setDisplayName(ChatColor.RED + "COMING SOON");
+        barrierBlock.setItemMeta(barrierMeta);
+
+        inventory.setItem(8, barrierBlock);
+        for (int i = 28; i <= 35; i++) {inventory.setItem(i, barrierBlock);}
+        for (int i = 40; i <= 44; i++) {inventory.setItem(i, barrierBlock);}
 
         ItemStack fillerGlass = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = fillerGlass.getItemMeta();
@@ -86,7 +98,7 @@ public class CookieClicker implements Listener {
 
         meta.setLore(Arrays.asList(
                 ChatColor.GRAY + "Cookie Production",
-                ChatColor.GOLD + "0" + ChatColor.DARK_GRAY + " per second",
+                ChatColor.GOLD + data.formatNumber(data.getCookiesPerSecond()) + ChatColor.DARK_GRAY + " per second",
                 ChatColor.GRAY + "All-Time Cookie: " + ChatColor.GOLD + data.formatNumber(data.getAllTimeCookies())
         ));
         cookie.setItemMeta(meta);
@@ -119,28 +131,121 @@ public class CookieClicker implements Listener {
     }
 
     private ItemStack createGrandmaItem(Player player) {
-    PlayerData data = getPlayerData(player);
-    ItemStack grandma = new ItemStack(Material.CAKE, data.getGrandmaLevel());
-    ItemMeta meta = grandma.getItemMeta();
+        PlayerData data = getPlayerData(player);
+        ItemStack grandma = new ItemStack(Material.FURNACE);
+        ItemMeta meta = grandma.getItemMeta();
 
-    meta.setDisplayName(ChatColor.LIGHT_PURPLE + "Grandma [" + data.getGrandmaLevel() + "]");
-    int nextCookiesPerSecond = data.getCookiesPerSecond() + 1;
-    int cost = (int) (50 * Math.pow(GRANDMA_COST_MULTIPLIER, data.getGrandmaLevel()));
-    meta.setLore(Arrays.asList(
-            ChatColor.GRAY + "Cookie Per Second: +" + ChatColor.GOLD + data.getCookiesPerSecond() + " Cookie",
-            ChatColor.GREEN + "UPGRADE" + ChatColor.DARK_GRAY + "→" + ChatColor.LIGHT_PURPLE + "Grandma [" + (data.getGrandmaLevel() + 1) + "]",
-            ChatColor.DARK_GRAY + "+" + data.getCookiesPerSecond() + " Cookie per second",
-            ChatColor.GOLD + "+" + nextCookiesPerSecond + " Cookie per second",
-            "",
-            ChatColor.GRAY + "Cost",
-            ChatColor.GOLD + data.formatNumber(cost) + " Cookie",
-            "",
-            ChatColor.YELLOW + "Click to upgrade!"
-    ));
-    grandma.setItemMeta(meta);
+        meta.setDisplayName(ChatColor.LIGHT_PURPLE + "Grandma [" + data.getGrandmaLevel() + "]");
+        int nextGrandmaCookiesPerSecond = data.getGrandmaLevel() + 1;
+        int cost = (int) (50 * Math.pow(GRANDMA_COST_MULTIPLIER, data.getGrandmaLevel()));
+        meta.setLore(Arrays.asList(
+                ChatColor.GRAY + "Grandma Cookie Per Second: +" + ChatColor.GOLD + data.getGrandmaLevel() + " Cookie",
+                ChatColor.GREEN + "UPGRADE" + ChatColor.DARK_GRAY + "→" + ChatColor.LIGHT_PURPLE + "Grandma [" + (data.getGrandmaLevel() + 1) + "]",
+                ChatColor.DARK_GRAY + "+" + data.getGrandmaLevel() + " Cookie per second",
+                ChatColor.GOLD + "+" + nextGrandmaCookiesPerSecond + " Cookie per second",
+                "",
+                ChatColor.GRAY + "Cost",
+                ChatColor.GOLD + data.formatNumber(cost) + " Cookie",
+                "",
+                ChatColor.YELLOW + "Click to upgrade!"
+        ));
+        grandma.setItemMeta(meta);
 
-    return grandma;
-}
+        return grandma;
+    }
+
+    private ItemStack createFarmItem(Player player) {
+        PlayerData data = getPlayerData(player);
+        ItemStack farm = new ItemStack(Material.FARMLAND);
+        ItemMeta meta = farm.getItemMeta();
+
+        if (data.getGrandmaLevel() < 20) {
+            meta.setDisplayName(ChatColor.RED + "Farm");
+            meta.setLore(Arrays.asList(
+                    ChatColor.GRAY + "Requires Grandma level 20 to unlock!"
+            ));
+        } else {
+            meta.setDisplayName(ChatColor.LIGHT_PURPLE + "Farm [" + data.getFarmLevel() + "]");
+            int nextFarmCookiesPerSecond = (data.getFarmLevel() + 1) * 2;
+            int cost = 1400 * (int) Math.pow(1.25, data.getFarmLevel());
+            meta.setLore(Arrays.asList(
+                    ChatColor.GRAY + "Farm Cookie Per Second: +" + ChatColor.GOLD + (data.getFarmLevel() * 2) + " Cookie",
+                    ChatColor.GREEN + "UPGRADE" + ChatColor.DARK_GRAY + "→" + ChatColor.LIGHT_PURPLE + "Farm [" + (data.getFarmLevel() + 1) + "]",
+                    ChatColor.DARK_GRAY + "+" + (data.getFarmLevel() * 2) + " Cookie per second",
+                    ChatColor.GOLD + "+" + nextFarmCookiesPerSecond + " Cookie per second",
+                    "",
+                    ChatColor.GRAY + "Cost",
+                    ChatColor.GOLD + data.formatNumber(cost) + " Cookie",
+                    "",
+                    ChatColor.YELLOW + "Click to upgrade!"
+            ));
+        }
+        farm.setItemMeta(meta);
+
+        return farm;
+    }
+
+    private ItemStack createMineItem(Player player) {
+        PlayerData data = getPlayerData(player);
+        ItemStack mine = new ItemStack(Material.COAL_ORE);
+        ItemMeta meta = mine.getItemMeta();
+
+        if (data.getFarmLevel() < 20) {
+            meta.setDisplayName(ChatColor.RED + "Mine");
+            meta.setLore(Arrays.asList(
+                    ChatColor.GRAY + "Requires Farm level 20 to unlock!"
+            ));
+        } else {
+            meta.setDisplayName(ChatColor.LIGHT_PURPLE + "Mine [" + data.getMineLevel() + "]");
+            int nextMineCookiesPerSecond = (data.getMineLevel() + 1) * 3;
+            int cost = 3200 * (int) Math.pow(1.25, data.getMineLevel());
+            meta.setLore(Arrays.asList(
+                    ChatColor.GRAY + "Mine Cookie Per Second: +" + ChatColor.GOLD + (data.getMineLevel() * 3) + " Cookie",
+                    ChatColor.GREEN + "UPGRADE" + ChatColor.DARK_GRAY + "→" + ChatColor.LIGHT_PURPLE + "Mine [" + (data.getMineLevel() + 1) + "]",
+                    ChatColor.DARK_GRAY + "+" + (data.getMineLevel() * 3) + " Cookie per second",
+                    ChatColor.GOLD + "+" + nextMineCookiesPerSecond + " Cookie per second",
+                    "",
+                    ChatColor.GRAY + "Cost",
+                    ChatColor.GOLD + data.formatNumber(cost) + " Cookie",
+                    "",
+                    ChatColor.YELLOW + "Click to upgrade!"
+            ));
+        }
+        mine.setItemMeta(meta);
+
+        return mine;
+    }
+
+    private ItemStack createFactoryItem(Player player) {
+        PlayerData data = getPlayerData(player);
+        ItemStack factory = new ItemStack(Material.STONECUTTER);
+        ItemMeta meta = factory.getItemMeta();
+
+        if (data.getMineLevel() < 20) {
+            meta.setDisplayName(ChatColor.RED + "Factory");
+            meta.setLore(Arrays.asList(
+                    ChatColor.GRAY + "Requires Mine level 20 to unlock!"
+            ));
+        } else {
+            meta.setDisplayName(ChatColor.LIGHT_PURPLE + "Factory [" + data.getFactoryLevel() + "]");
+            int nextFactoryCookiesPerSecond = (data.getFactoryLevel() + 1) * 4;
+            int cost = 5700 * (int) Math.pow(1.25, data.getFactoryLevel());
+            meta.setLore(Arrays.asList(
+                    ChatColor.GRAY + "Factory Cookie Per Second: +" + ChatColor.GOLD + (data.getFactoryLevel() * 4) + " Cookie",
+                    ChatColor.GREEN + "UPGRADE" + ChatColor.DARK_GRAY + "→" + ChatColor.LIGHT_PURPLE + "Factory [" + (data.getFactoryLevel() + 1) + "]",
+                    ChatColor.DARK_GRAY + "+" + (data.getFactoryLevel() * 4) + " Cookie per second",
+                    ChatColor.GOLD + "+" + nextFactoryCookiesPerSecond + " Cookie per second",
+                    "",
+                    ChatColor.GRAY + "Cost",
+                    ChatColor.GOLD + data.formatNumber(cost) + " Cookie",
+                    "",
+                    ChatColor.YELLOW + "Click to upgrade!"
+            ));
+        }
+        factory.setItemMeta(meta);
+
+        return factory;
+    }
 
     private ItemStack createRankingItem(Player player) {
         ItemStack wheat = new ItemStack(Material.WHEAT);
@@ -205,9 +310,33 @@ public class CookieClicker implements Listener {
 
     private void updateGrandmaItem(Player player) {
         Inventory inventory = player.getOpenInventory().getTopInventory();
-        if (inventory.getItem(36) != null && inventory.getItem(36).getType() == Material.CAKE) {
+        if (inventory.getItem(36) != null && inventory.getItem(36).getType() == Material.FURNACE) {
             ItemStack grandmaItem = createGrandmaItem(player);
             inventory.setItem(36, grandmaItem);
+        }
+    }
+
+    private void updateFarmItem(Player player) {
+        Inventory inventory = player.getOpenInventory().getTopInventory();
+        if (inventory.getItem(37) != null && inventory.getItem(37).getType() == Material.FARMLAND) {
+            ItemStack farmItem = createFarmItem(player);
+            inventory.setItem(37, farmItem);
+        }
+    }
+
+    private void updateMineItem(Player player) {
+        Inventory inventory = player.getOpenInventory().getTopInventory();
+        if (inventory.getItem(38) != null && inventory.getItem(38).getType() == Material.COAL_ORE) {
+            ItemStack mineItem = createMineItem(player);
+            inventory.setItem(38, mineItem);
+        }
+    }
+
+    private void updateFactoryItem(Player player) {
+        Inventory inventory = player.getOpenInventory().getTopInventory();
+        if (inventory.getItem(39) != null && inventory.getItem(39).getType() == Material.STONECUTTER) {
+            ItemStack factoryItem = createFactoryItem(player);
+            inventory.setItem(39, factoryItem);
         }
     }
 
@@ -261,19 +390,67 @@ public class CookieClicker implements Listener {
                         }
                         break;
 
-                    case CAKE:
+                    case FURNACE:
                         if (data.upgradeGrandma()) {
                             player.sendMessage(ChatColor.GREEN + "Grandma upgraded to [" + data.getGrandmaLevel() + "]!");
                             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
                             updateGrandmaItem(player);
+                            updateFarmItem(player);
                         } else {
                             player.sendMessage(ChatColor.RED + "Not enough cookies to upgrade!");
                             player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
                         }
                         break;
 
+                    case FARMLAND:
+                        if (data.getGrandmaLevel() >= 20) {
+                            if (data.upgradeFarm()) {
+                                player.sendMessage(ChatColor.GREEN + "Farm upgraded to [" + data.getFarmLevel() + "]!");
+                                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                                updateFarmItem(player);
+                                updateMineItem(player);
+                            } else {
+                                player.sendMessage(ChatColor.RED + "Not enough cookies to upgrade!");
+                                player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+                            }
+                        } else {
+                            player.sendMessage(ChatColor.RED + "Requires Grandma level 20 to unlock!");
+                        }
+                        break;
+
+                    case COAL_ORE:
+                        if (data.getFarmLevel() >= 20) {
+                            if (data.upgradeMine()) {
+                                player.sendMessage(ChatColor.GREEN + "Mine upgraded to [" + data.getMineLevel() + "]!");
+                                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                                updateMineItem(player);
+                            } else {
+                                player.sendMessage(ChatColor.RED + "Not enough cookies to upgrade!");
+                                player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+                            }
+                        } else {
+                            player.sendMessage(ChatColor.RED + "Requires Farm level 20 to unlock!");
+                        }
+                        break;
+
+
+                    case STONECUTTER:
+                        if (data.getMineLevel() >= 20) {
+                            if (data.upgradeFactory()) {
+                                player.sendMessage(ChatColor.GREEN + "Factory upgraded to [" + data.getFactoryLevel() + "]!");
+                                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                                updateFactoryItem(player);
+                            } else {
+                                player.sendMessage(ChatColor.RED + "Not enough cookies to upgrade!");
+                                player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+                            }
+                        } else {
+                            player.sendMessage(ChatColor.RED + "Requires Mine level 20 to unlock!");
+                        }
+                        break;
+
                     case WHEAT:
-                        player.sendMessage(ChatColor.GREEN + "更新中...");
+                        player.sendMessage(ChatColor.GREEN + "Refreshing...");
                         savePlayerData(player);
                         break;
 
@@ -281,7 +458,6 @@ public class CookieClicker implements Listener {
                         break;
                 }
             }
-
             updateRankingItem(player);
         }
     }

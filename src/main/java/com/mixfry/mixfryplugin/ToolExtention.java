@@ -13,10 +13,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class DurabilityAlert implements Listener {
+public class ToolExtention implements Listener {
+
     private final Map<UUID, Map<Material, Boolean>> alertedItems = new HashMap<>();
 
-    public DurabilityAlert() {
+    public ToolExtention() {
         Bukkit.getPluginManager().registerEvents(this, MixfryPlugin.getInstance());
     }
 
@@ -26,7 +27,7 @@ public class DurabilityAlert implements Listener {
         ItemStack item = event.getItem();
         Material itemType = item.getType();
         int maxDurability = item.getType().getMaxDurability();
-        int currentDurability = maxDurability - item.getDurability();
+        int currentDurability = maxDurability - item.getDurability() - event.getDamage();
 
         if (currentDurability <= maxDurability * 0.1) {
             UUID playerUUID = player.getUniqueId();

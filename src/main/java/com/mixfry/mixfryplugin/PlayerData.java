@@ -15,6 +15,9 @@ public class PlayerData {
     private int giantHandLevel;
     private int cookiesPerClick;
     private int grandmaLevel;
+    private int farmLevel;
+    private int mineLevel;
+    private int factoryLevel;
     private int cookiesPerSecond;
     private long lastCloseTime;
 
@@ -22,6 +25,7 @@ public class PlayerData {
         this.player = player;
         this.dataFile = new File(MixfryPlugin.getInstance().getDataFolder(), player.getName() + "_cookies.yml");
         loadData();
+        addOfflineCookies();
     }
 
     public void loadData() {
@@ -38,7 +42,10 @@ public class PlayerData {
         allTimeCookies = dataConfig.getInt("allTimeCookies", 0);
         giantHandLevel = dataConfig.getInt("giantHandLevel", 1);
         cookiesPerClick = dataConfig.getInt("cookiesPerClick", 1);
-        grandmaLevel = dataConfig.getInt("grandmaLevel", 0);
+        grandmaLevel = dataConfig.getInt("grandmaLevel", 1);
+        farmLevel = dataConfig.getInt("farmLevel", 0);
+        mineLevel = dataConfig.getInt("mineLevel", 0);
+        factoryLevel = dataConfig.getInt("factoryLevel", 0);
         cookiesPerSecond = dataConfig.getInt("cookiesPerSecond", 0);
         lastCloseTime = dataConfig.getLong("lastCloseTime", System.currentTimeMillis());
     }
@@ -49,6 +56,9 @@ public class PlayerData {
         dataConfig.set("giantHandLevel", giantHandLevel);
         dataConfig.set("cookiesPerClick", cookiesPerClick);
         dataConfig.set("grandmaLevel", grandmaLevel);
+        dataConfig.set("farmLevel", farmLevel);
+        dataConfig.set("mineLevel", mineLevel);
+        dataConfig.set("factoryLevel", factoryLevel);
         dataConfig.set("cookiesPerSecond", cookiesPerSecond);
         dataConfig.set("lastCloseTime", lastCloseTime);
         try {
@@ -78,6 +88,18 @@ public class PlayerData {
         return grandmaLevel;
     }
 
+    public int getFarmLevel() {
+        return farmLevel;
+    }
+
+    public int getMineLevel() {
+        return mineLevel;
+    }
+
+    public int getFactoryLevel() {
+        return factoryLevel;
+    }
+
     public int getCookiesPerSecond() {
         return cookiesPerSecond;
     }
@@ -88,6 +110,14 @@ public class PlayerData {
 
     public void setCookieCount(int cookieCount) {
         this.cookieCount = cookieCount;
+    }
+
+    public void setFarmLevel(int farmLevel) {
+        this.farmLevel = farmLevel;
+    }
+
+    public void setMineLevel(int mineLevel) {
+        this.mineLevel = mineLevel;
     }
 
     public void incrementCookieCount() {
@@ -107,11 +137,44 @@ public class PlayerData {
     }
 
     public boolean upgradeGrandma() {
-        int cost = (int) (50 * Math.pow(1.25, grandmaLevel));
+        int cost = (int) (50 * Math.pow(1.25, grandmaLevel - 1));
         if (cookieCount >= cost) {
             cookieCount -= cost;
             grandmaLevel++;
             cookiesPerSecond++;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean upgradeFarm() {
+        int cost = 1400 * (int) Math.pow(1.25, farmLevel);
+        if (cookieCount >= cost) {
+            cookieCount -= cost;
+            farmLevel++;
+            cookiesPerSecond += 2;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean upgradeMine() {
+        int cost = 3200 * (int) Math.pow(1.25, mineLevel);
+        if (cookieCount >= cost) {
+            cookieCount -= cost;
+            mineLevel++;
+            cookiesPerSecond += 3;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean upgradeFactory() {
+        int cost = 5700 * (int) Math.pow(1.25, factoryLevel);
+        if (cookieCount >= cost) {
+            cookieCount -= cost;
+            factoryLevel++;
+            cookiesPerSecond += 4;
             return true;
         }
         return false;
@@ -124,6 +187,15 @@ public class PlayerData {
 
     public void setLastCloseTime(long lastCloseTime) {
         this.lastCloseTime = lastCloseTime;
+    }
+
+    private void addOfflineCookies() {
+        long currentTime = System.currentTimeMillis();
+        long elapsedTime = currentTime - lastCloseTime;
+        int secondsElapsed = (int) (elapsedTime / 1000);
+        int offlineCookies = secondsElapsed * cookiesPerSecond;
+        cookieCount += offlineCookies;
+        allTimeCookies += offlineCookies;
     }
 
     public void updateRanking() {
