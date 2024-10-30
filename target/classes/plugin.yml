@@ -1,8 +1,0 @@
-name: MixfryPlugin
-version: '0.2.0'
-main: com.mixfry.mixfryplugin.MixfryPlugin
-api-version: '1.16'
-commands:
-  cookie_clicker:
-    description: クッキークリッカーのメニューを開く
-    aliases: [ cc ]
