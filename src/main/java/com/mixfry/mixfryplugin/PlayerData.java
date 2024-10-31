@@ -26,7 +26,6 @@ public class PlayerData {
     private int mineLevel;
     private int factoryLevel;
     private int cookiesPerSecond;
-    private long lastCloseTime;
     private long lastLogoutTime;
     private int offlineCookies;
 
@@ -75,7 +74,6 @@ public class PlayerData {
         dataConfig.set("mineLevel", mineLevel);
         dataConfig.set("factoryLevel", factoryLevel);
         dataConfig.set("cookiesPerSecond", cookiesPerSecond);
-        dataConfig.set("lastCloseTime", lastCloseTime);
         dataConfig.set("lastLogoutTime", lastLogoutTime);
         dataConfig.set("offlineCookies", offlineCookies);
         try {
@@ -133,10 +131,6 @@ public class PlayerData {
         return offlineCookies;
     }
 
-    public long getLastCloseTime() {
-        return lastCloseTime;
-    }
-
     public void resetOfflineCookies() {
         offlineCookies = 0;
     }
@@ -174,7 +168,7 @@ public class PlayerData {
     }
 
     public boolean upgradeGrandma() {
-        int cost = (int) (50 * Math.pow(1.25, grandmaLevel - 1));
+        int cost = calculateGrandmaCost(grandmaLevel);
         if (cookieCount >= cost) {
             cookieCount -= cost;
             grandmaLevel++;
@@ -185,7 +179,7 @@ public class PlayerData {
     }
 
     public boolean upgradeFarm() {
-        int cost = 1400 * (int) Math.pow(1.25, farmLevel);
+        int cost = calculateFarmCost(farmLevel);
         if (cookieCount >= cost) {
             cookieCount -= cost;
             farmLevel++;
@@ -196,7 +190,7 @@ public class PlayerData {
     }
 
     public boolean upgradeMine() {
-        int cost = 3200 * (int) Math.pow(1.25, mineLevel);
+        int cost = calculateMineCost(mineLevel);
         if (cookieCount >= cost) {
             cookieCount -= cost;
             mineLevel++;
@@ -207,7 +201,7 @@ public class PlayerData {
     }
 
     public boolean upgradeFactory() {
-        int cost = 5700 * (int) Math.pow(1.25, factoryLevel);
+        int cost = calculateFactoryCost(factoryLevel);
         if (cookieCount >= cost) {
             cookieCount -= cost;
             factoryLevel++;
@@ -217,35 +211,25 @@ public class PlayerData {
         return false;
     }
 
+    private int calculateGrandmaCost(int level) {
+        return (int) (50 * Math.pow(1.1, level) + 10 * level);
+    }
+
+    private int calculateFarmCost(int level) {
+        return (int) (1400 * Math.pow(1.1, level) + 10 * level);
+    }
+
+    private int calculateMineCost(int level) {
+        return (int) (3200 * Math.pow(1.1, level) + 10 * level);
+    }
+
+    private int calculateFactoryCost(int level) {
+        return (int) (5700 * Math.pow(1.1, level) + 10 * level);
+    }
+
     public void incrementCookiesPerSecond() {
         cookieCount += cookiesPerSecond;
         allTimeCookies += cookiesPerSecond;
-    }
-
-    public void setLastCloseTime(long lastCloseTime) {
-        this.lastCloseTime = lastCloseTime;
-    }
-
-    private void addOfflineCookies() {
-        long currentTime = System.currentTimeMillis();
-        long elapsedTime = currentTime - lastCloseTime;
-        int secondsElapsed = (int) (elapsedTime / 1000);
-        int offlineCookies = secondsElapsed * cookiesPerSecond;
-        cookieCount += offlineCookies;
-        allTimeCookies += offlineCookies;
-    }
-
-    public void updateRanking() {
-        File rankingsFile = new File(MixfryPlugin.getInstance().getDataFolder(), "rankings.yml");
-        FileConfiguration rankingsConfig = YamlConfiguration.loadConfiguration(rankingsFile);
-
-        rankingsConfig.set(player.getName(), allTimeCookies);
-
-        try {
-            rankingsConfig.save(rankingsFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public void calculateOfflineCookies() {
