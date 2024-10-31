@@ -9,6 +9,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -66,6 +68,7 @@ public class CookieClicker implements Listener {
         inventory.setItem(37, createFarmItem(player));
         inventory.setItem(38, createMineItem(player));
         inventory.setItem(39, createFactoryItem(player));
+        inventory.setItem(45, createOfflineRewardItem(player));
         inventory.setItem(53, createRankingItem(player));
 
         ItemStack barrierBlock = new ItemStack(Material.BARRIER);
@@ -253,9 +256,8 @@ public class CookieClicker implements Listener {
         meta.setDisplayName(ChatColor.AQUA + "Cookie Clicker Ranking");
 
         List<Map.Entry<String, Integer>> sortedPlayers = new ArrayList<>();
-        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-            PlayerData data = getPlayerData(onlinePlayer);
-            sortedPlayers.add(new AbstractMap.SimpleEntry<>(onlinePlayer.getName(), data.getAllTimeCookies()));
+        for (PlayerData data : PlayerData.getAllPlayerData()) {
+            sortedPlayers.add(new AbstractMap.SimpleEntry<>(Bukkit.getOfflinePlayer(data.getPlayerUUID()).getName(), data.getAllTimeCookies()));
         }
 
         sortedPlayers.sort(Map.Entry.<String, Integer>comparingByValue().reversed());
@@ -290,6 +292,48 @@ public class CookieClicker implements Listener {
         meta.setLore(lore);
         wheat.setItemMeta(meta);
         return wheat;
+    }
+
+    private ItemStack createOfflineRewardItem(Player player) {
+        PlayerData data = getPlayerData(player);
+        int offlineCookies = data.getOfflineCookies();
+
+        ItemStack rewardItem;
+        if (offlineCookies > 0) {
+            rewardItem = new ItemStack(Material.CHEST_MINECART);
+        } else {
+            rewardItem = new ItemStack(Material.MINECART);
+        }
+
+        ItemMeta meta = rewardItem.getItemMeta();
+        meta.setDisplayName(ChatColor.AQUA + "Offline Reward");
+
+        List<String> lore = new ArrayList<>();
+        lore.add(ChatColor.GOLD + "1% chance to ×10 cookie !");
+        lore.add(" ");
+        lore.add(ChatColor.GRAY + "Gathered " + ChatColor.GOLD + data.formatNumber(offlineCookies) + ChatColor.GRAY + " Cookie");
+
+        long elapsedTime = System.currentTimeMillis() - data.getLastLogoutTime();
+        int secondsElapsed = (int) (elapsedTime / 1000);
+        int days = secondsElapsed / 86400;
+        int hours = (secondsElapsed % 86400) / 3600;
+        int minutes = (secondsElapsed % 3600) / 60;
+
+        StringBuilder timeString = new StringBuilder();
+        if (days > 0) {
+            timeString.append(days).append("day ");
+        }
+        if (hours > 0) {
+            timeString.append(hours).append("hour ");
+        }
+        timeString.append(minutes).append("minute");
+
+        lore.add(ChatColor.GRAY + "Offline time: " + timeString.toString().trim());
+
+        meta.setLore(lore);
+        rewardItem.setItemMeta(meta);
+
+        return rewardItem;
     }
 
     private void updateCookieItem(Player player) {
@@ -345,6 +389,14 @@ public class CookieClicker implements Listener {
         if (inventory.getItem(53) != null && inventory.getItem(53).getType() == Material.WHEAT) {
             ItemStack rankingItem = createRankingItem(player);
             inventory.setItem(53, rankingItem);
+        }
+    }
+
+    private void updateOfflineRewardItem(Player player) {
+        Inventory inventory = player.getOpenInventory().getTopInventory();
+        if (inventory.getItem(45) != null && (inventory.getItem(45).getType() == Material.MINECART || inventory.getItem(45).getType() == Material.CHEST_MINECART)) {
+            ItemStack rewardItem = createOfflineRewardItem(player);
+            inventory.setItem(45, rewardItem);
         }
     }
 
@@ -454,11 +506,37 @@ public class CookieClicker implements Listener {
                         savePlayerData(player);
                         break;
 
+                    case MINECART:
+                    case CHEST_MINECART:
+                        int offlineCookies = data.getOfflineCookies();
+
+                        if (offlineCookies > 0) {
+                            double chance = Math.random();
+                            if (chance < 0.01) {
+                                offlineCookies *= 10;
+                                player.sendMessage(ChatColor.GOLD + "Lucky! You received 10x cookies!");
+                                player.playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.0f, 1.0f);
+                            }
+
+                            data.setCookieCount(data.getCookieCount() + offlineCookies);
+                            data.updateRanking();
+                            player.sendMessage(ChatColor.GREEN + "You received " + data.formatNumber(offlineCookies) + " cookies from offline rewards!");
+                            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                            data.resetOfflineCookies();
+                            savePlayerData(player);
+                            updateCookieItem(player);
+                            updateRankingItem(player);
+                        } else {
+                            player.sendMessage(ChatColor.RED + "No cookies gathered while offline.");
+                            player.playSound(player.getLocation(),Sound.BLOCK_ANVIL_PLACE, 1.0f, 1.0f);
+                        }
+                        break;
+
                     default:
                         break;
                 }
             }
-            updateRankingItem(player);
+            updateOfflineRewardItem(player);
         }
     }
 
@@ -471,4 +549,22 @@ public class CookieClicker implements Listener {
             savePlayerData(player);
         }
     }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        PlayerData data = getPlayerData(player);
+        data.calculateOfflineCookies();
+        savePlayerData(player);
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        PlayerData data = getPlayerData(player);
+        data.setLastLogoutTime(System.currentTimeMillis());
+        savePlayerData(player);
+    }
 }
+
+//aa

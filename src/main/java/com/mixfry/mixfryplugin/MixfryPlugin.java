@@ -19,6 +19,8 @@ public class MixfryPlugin extends JavaPlugin {
         new RareDropAlert();
         new ScoreBoard(this);
         cookieClicker = new CookieClicker();
+        getCommand("changelog").setExecutor(new Changelog());
+        getServer().getPluginManager().registerEvents(new AnvilColor(), this);
         for (Player player : getServer().getOnlinePlayers()) {
             new PlayerData(player);
         }

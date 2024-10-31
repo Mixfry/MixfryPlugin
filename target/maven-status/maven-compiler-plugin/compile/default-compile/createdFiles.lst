@@ -3,7 +3,9 @@ com/mixfry/mixfryplugin/ScoreBoard$1.class
 com/mixfry/mixfryplugin/CookieClicker.class
 com/mixfry/mixfryplugin/RareDropAlert.class
 com/mixfry/mixfryplugin/PlayerData.class
+com/mixfry/mixfryplugin/AnvilColor.class
 com/mixfry/mixfryplugin/Cords.class
+com/mixfry/mixfryplugin/Changelog.class
 com/mixfry/mixfryplugin/ScoreBoard.class
 com/mixfry/mixfryplugin/MixfryPlugin.class
 com/mixfry/mixfryplugin/DeathPoint.class
