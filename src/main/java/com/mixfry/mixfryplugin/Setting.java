@@ -1,4 +1,3 @@
-// src/main/java/com/mixfry/mixfryplugin/Setting.java
 package com.mixfry.mixfryplugin;
 
 import org.bukkit.Bukkit;

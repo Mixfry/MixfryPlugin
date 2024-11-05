@@ -32,10 +32,17 @@ public class ScoreBoard {
     }
 
     private void updateScoreboard(Player player) {
-        ScoreboardManager manager = Bukkit.getScoreboardManager();
-        Scoreboard board = manager.getNewScoreboard();
-        Objective objective = board.registerNewObjective("MixfryBoard", "dummy", ChatColor.GOLD + "" + ChatColor.BOLD + "受逃会");
-        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+        Scoreboard board = player.getScoreboard();
+        Objective objective = board.getObjective("MixfryBoard");
+
+        if (objective == null) {
+            objective = board.registerNewObjective("MixfryBoard", "dummy", ChatColor.GOLD + "" + ChatColor.BOLD + "受逃会");
+            objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+        }
+
+        for (String entry : board.getEntries()) {
+            board.resetScores(entry);
+        }
 
         Score emptyLine1 = objective.getScore(" ");
         emptyLine1.setScore(5);
@@ -48,7 +55,8 @@ public class ScoreBoard {
         String coords = ChatColor.GRAY + "[" +
                 ChatColor.WHITE + location.getBlockX() + ChatColor.GRAY + ", " +
                 ChatColor.WHITE + location.getBlockY() + ChatColor.GRAY + ", " +
-                ChatColor.WHITE + location.getBlockZ() + ChatColor.GRAY + "]";
+                ChatColor.WHITE + location.getBlockZ() + ChatColor.GRAY +
+                "]";
         Score coordsLine = objective.getScore(coords);
         coordsLine.setScore(3);
 

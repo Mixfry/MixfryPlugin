@@ -1,4 +1,3 @@
-// src/main/java/com/mixfry/mixfryplugin/RareDropAlert.java
 package com.mixfry.mixfryplugin;
 
 import org.bukkit.Bukkit;
