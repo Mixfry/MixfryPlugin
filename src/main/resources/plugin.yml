@@ -10,3 +10,5 @@ commands:
     description: 現在の座標を表示する
   changelog:
     description: プラグインの変更点を表示します
+  setting:
+    description: セッティングメニューを開きます

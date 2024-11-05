@@ -2,8 +2,13 @@ package com.mixfry.mixfryplugin;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+import java.io.IOException;
 
 public class MixfryPlugin extends JavaPlugin {
 
@@ -15,12 +20,13 @@ public class MixfryPlugin extends JavaPlugin {
         instance = this;
         new DeathPoint();
         new Cords();
-        new ToolExtention();
-        new RareDropAlert();
+        ToolExtention.getInstance();
+        RareDropAlert.getInstance();
         new ScoreBoard(this);
         cookieClicker = new CookieClicker();
-        getCommand("changelog").setExecutor(new Changelog());
-        getServer().getPluginManager().registerEvents(new AnvilColor(), this);
+        Setting setting = new Setting(this);
+        getCommand("setting").setExecutor(setting);
+        getServer().getPluginManager().registerEvents(setting, this);
         for (Player player : getServer().getOnlinePlayers()) {
             new PlayerData(player);
         }
@@ -28,6 +34,18 @@ public class MixfryPlugin extends JavaPlugin {
 
     public static MixfryPlugin getInstance() {
         return instance;
+    }
+
+    public FileConfiguration getPlayerConfig(Player player) {
+        File configFile = new File(getDataFolder(), player.getName() + "_config.yml");
+        if (!configFile.exists()) {
+            try {
+                configFile.createNewFile();
+            } catch (IOException e) {
+                getLogger().severe("設定ファイルの作成中にエラーが発生しました: " + e.getMessage());
+            }
+        }
+        return YamlConfiguration.loadConfiguration(configFile);
     }
 
     @Override

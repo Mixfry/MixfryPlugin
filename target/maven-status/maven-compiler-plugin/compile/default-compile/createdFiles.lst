@@ -8,6 +8,7 @@ com/mixfry/mixfryplugin/Cords.class
 com/mixfry/mixfryplugin/Changelog.class
 com/mixfry/mixfryplugin/ScoreBoard.class
 com/mixfry/mixfryplugin/MixfryPlugin.class
+com/mixfry/mixfryplugin/Setting.class
 com/mixfry/mixfryplugin/DeathPoint.class
 com/mixfry/mixfryplugin/ToolExtention.class
 com/mixfry/mixfryplugin/CookieClicker$2.class

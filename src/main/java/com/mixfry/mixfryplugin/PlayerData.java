@@ -26,6 +26,7 @@ public class PlayerData {
     private int mineLevel;
     private int factoryLevel;
     private int cookiesPerSecond;
+    private long lastCloseTime;
     private long lastLogoutTime;
     private int offlineCookies;
 
@@ -74,6 +75,7 @@ public class PlayerData {
         dataConfig.set("mineLevel", mineLevel);
         dataConfig.set("factoryLevel", factoryLevel);
         dataConfig.set("cookiesPerSecond", cookiesPerSecond);
+        dataConfig.set("lastCloseTime", lastCloseTime);
         dataConfig.set("lastLogoutTime", lastLogoutTime);
         dataConfig.set("offlineCookies", offlineCookies);
         try {
@@ -131,6 +133,10 @@ public class PlayerData {
         return offlineCookies;
     }
 
+    public long getLastCloseTime() {
+        return lastCloseTime;
+    }
+
     public void resetOfflineCookies() {
         offlineCookies = 0;
     }
@@ -157,7 +163,7 @@ public class PlayerData {
     }
 
     public boolean upgradeGiantHand() {
-        int cost = (int) (25 * Math.pow(1.5, giantHandLevel - 1));
+        int cost = (int) (25 * Math.pow(1.25, giantHandLevel - 1));
         if (cookieCount >= cost) {
             cookieCount -= cost;
             giantHandLevel++;
@@ -230,6 +236,32 @@ public class PlayerData {
     public void incrementCookiesPerSecond() {
         cookieCount += cookiesPerSecond;
         allTimeCookies += cookiesPerSecond;
+    }
+
+    public void setLastCloseTime(long lastCloseTime) {
+        this.lastCloseTime = lastCloseTime;
+    }
+
+    private void addOfflineCookies() {
+        long currentTime = System.currentTimeMillis();
+        long elapsedTime = currentTime - lastCloseTime;
+        int secondsElapsed = (int) (elapsedTime / 1000);
+        int offlineCookies = secondsElapsed * cookiesPerSecond;
+        cookieCount += offlineCookies;
+        allTimeCookies += offlineCookies;
+    }
+
+    public void updateRanking() {
+        File rankingsFile = new File(MixfryPlugin.getInstance().getDataFolder(), "rankings.yml");
+        FileConfiguration rankingsConfig = YamlConfiguration.loadConfiguration(rankingsFile);
+
+        rankingsConfig.set(player.getName(), allTimeCookies);
+
+        try {
+            rankingsConfig.save(rankingsFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void calculateOfflineCookies() {

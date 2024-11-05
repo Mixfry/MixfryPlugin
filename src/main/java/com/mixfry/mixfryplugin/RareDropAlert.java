@@ -1,9 +1,11 @@
+// src/main/java/com/mixfry/mixfryplugin/RareDropAlert.java
 package com.mixfry.mixfryplugin;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -16,11 +18,29 @@ import java.util.Map;
 
 public class RareDropAlert implements Listener {
 
+    private static RareDropAlert instance;
     private final Map<Material, Double> rareDrops = new HashMap<>();
+    private boolean rareDropNotificationEnabled = true;
 
-    public RareDropAlert() {
+    private RareDropAlert() {
         Bukkit.getPluginManager().registerEvents(this, MixfryPlugin.getInstance());
         initializeRareDrops();
+    }
+
+    public static RareDropAlert getInstance() {
+        if (instance == null) {
+            instance = new RareDropAlert();
+        }
+        return instance;
+    }
+
+    public void setRareDropNotificationEnabled(boolean enabled) {
+        this.rareDropNotificationEnabled = enabled;
+    }
+
+    public void loadSettings(Player player) {
+        FileConfiguration config = MixfryPlugin.getInstance().getPlayerConfig(player);
+        rareDropNotificationEnabled = config.getBoolean("rareDropNotification", true);
     }
 
     private void initializeRareDrops() {
@@ -34,6 +54,10 @@ public class RareDropAlert implements Listener {
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
+        if (!rareDropNotificationEnabled) {
+            return;
+        }
+
         if (event.getEntity().getKiller() instanceof Player && event.getEntityType() != EntityType.IRON_GOLEM) {
             Player player = event.getEntity().getKiller();
             for (ItemStack drop : event.getDrops()) {
@@ -43,6 +67,7 @@ public class RareDropAlert implements Listener {
                     String message = ChatColor.BLUE + "RARE DROP! " + ChatColor.GOLD + itemName + " " + ChatColor.AQUA + "(" + probability + "%)";
                     player.sendMessage(message);
                     player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                    break;
                 }
             }
         }
