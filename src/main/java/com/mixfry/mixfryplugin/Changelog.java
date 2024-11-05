@@ -12,20 +12,12 @@ import java.util.List;
 public class Changelog implements CommandExecutor {
 
     private final List<String> changelog = Arrays.asList(
-        ChatColor.GOLD + "v1.1.0 - マルチアップデート" + ChatColor.GRAY + "- 2024/10/31",
-        ChatColor.GOLD + "・金床装飾機能 追加",
-        ChatColor.WHITE + "・名前の前に&aや&bなど、&をつけることで文字装飾が行えるようになりました",
-        ChatColor.GOLD + "スコアボード機能 追加",
-        ChatColor.WHITE + "・座標にバイオーム、時刻を表示するスコアボードを追加しました",
-        ChatColor.GOLD + "レアドロップ機能 追加",
-        ChatColor.WHITE + "・ウィザースケルトンの頭など、レアドロップが出た際に通知を行う機能を追加しました",
-        ChatColor.GOLD + "耐久値の警告機能 追加",
-        ChatColor.WHITE + "・耐久値が10%を切った際に警告を行う機能を追加しました",
-        ChatColor.GOLD + "クッキークリッカー アップデート" + ChatColor.GREEN + " ver 1.1",
-        ChatColor.WHITE + "・オフライン中のクッキーを回収できるようになりました、これは1%の確率で10倍受け取ることができます",
-        ChatColor.WHITE + "・放置しながらでもクッキーを生産できるようになりました",
-        ChatColor.WHITE + "・ランキング機能を修正しました",
-        ChatColor.WHITE + "・クッキーの生産量を調整しました"
+        ChatColor.GOLD + "v1.1.1 - 設定機能追加" + ChatColor.GRAY + "- 2024/11/05",
+        ChatColor.GOLD + "・設定機能 追加",
+        ChatColor.WHITE + "・耐久値の警告機能、レアドロップ通知機能のON/OFFが可能になりました",
+        ChatColor.WHITE + "・/configで設定画面を開くことができます",
+        ChatColor.GOLD + "クッキークリッカー アップデート" + ChatColor.GREEN + " ver 1.1.1",
+        ChatColor.WHITE + "・放置アップグレードのコストの計算方式を変更しました"
     );
 
     @Override
