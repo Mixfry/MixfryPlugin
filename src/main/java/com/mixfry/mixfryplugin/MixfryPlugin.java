@@ -22,13 +22,14 @@ public class MixfryPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
-        new DeathPoint();
+        DeathPoint.getInstance();
         new Cords();
-        ToolExtention.getInstance();
-        RareDropAlert.getInstance();
         new ScoreBoard(this);
         new CookieClicker();
         new Changelog();
+        new MineCombo(this);
+        ToolExtention.getInstance();
+        RareDropAlert.getInstance();
         cookieClicker = new CookieClicker();
         Setting setting = new Setting(this);
         getCommand("setting").setExecutor(setting);
