@@ -1,11 +1,12 @@
-/Users/mirai/IdeaProjects/MixfryPlugin/src/main/java/com/mixfry/mixfryplugin/Changelog.java
-/Users/mirai/IdeaProjects/MixfryPlugin/src/main/java/com/mixfry/mixfryplugin/CookieClicker.java
 /Users/mirai/IdeaProjects/MixfryPlugin/src/main/java/com/mixfry/mixfryplugin/ToolExtention.java
 /Users/mirai/IdeaProjects/MixfryPlugin/src/main/java/com/mixfry/mixfryplugin/ScoreBoard.java
+/Users/mirai/IdeaProjects/MixfryPlugin/src/main/java/com/mixfry/mixfryplugin/MineCombo.java
 /Users/mirai/IdeaProjects/MixfryPlugin/src/main/java/com/mixfry/mixfryplugin/DeathPoint.java
-/Users/mirai/IdeaProjects/MixfryPlugin/src/main/java/com/mixfry/mixfryplugin/Setting.java
+/Users/mirai/IdeaProjects/MixfryPlugin/src/main/java/com/mixfry/mixfryplugin/Commands/CookieClicker.java
+/Users/mirai/IdeaProjects/MixfryPlugin/src/main/java/com/mixfry/mixfryplugin/Commands/Cords.java
+/Users/mirai/IdeaProjects/MixfryPlugin/src/main/java/com/mixfry/mixfryplugin/Commands/Changelog.java
 /Users/mirai/IdeaProjects/MixfryPlugin/src/main/java/com/mixfry/mixfryplugin/PlayerData.java
 /Users/mirai/IdeaProjects/MixfryPlugin/src/main/java/com/mixfry/mixfryplugin/RareDropAlert.java
 /Users/mirai/IdeaProjects/MixfryPlugin/src/main/java/com/mixfry/mixfryplugin/AnvilColor.java
-/Users/mirai/IdeaProjects/MixfryPlugin/src/main/java/com/mixfry/mixfryplugin/Cords.java
 /Users/mirai/IdeaProjects/MixfryPlugin/src/main/java/com/mixfry/mixfryplugin/MixfryPlugin.java
+/Users/mirai/IdeaProjects/MixfryPlugin/src/main/java/com/mixfry/mixfryplugin/Commands/Setting.java

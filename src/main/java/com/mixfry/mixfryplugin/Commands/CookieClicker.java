@@ -1,5 +1,7 @@
-package com.mixfry.mixfryplugin;
+package com.mixfry.mixfryplugin.Commands;
 
+import com.mixfry.mixfryplugin.MixfryPlugin;
+import com.mixfry.mixfryplugin.PlayerData;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -255,12 +257,12 @@ public class CookieClicker implements Listener {
         ItemMeta meta = wheat.getItemMeta();
         meta.setDisplayName(ChatColor.AQUA + "Cookie Clicker Ranking");
 
-        List<Map.Entry<String, Integer>> sortedPlayers = new ArrayList<>();
+        List<Map.Entry<String, Long>> sortedPlayers = new ArrayList<>();
         for (PlayerData data : PlayerData.getAllPlayerData()) {
             sortedPlayers.add(new AbstractMap.SimpleEntry<>(Bukkit.getOfflinePlayer(data.getPlayerUUID()).getName(), data.getAllTimeCookies()));
         }
 
-        sortedPlayers.sort(Map.Entry.<String, Integer>comparingByValue().reversed());
+        sortedPlayers.sort(Map.Entry.<String, Long>comparingByValue().reversed());
 
         List<String> lore = new ArrayList<>();
         if (sortedPlayers.size() > 0) {
@@ -296,7 +298,7 @@ public class CookieClicker implements Listener {
 
     private ItemStack createOfflineRewardItem(Player player) {
         PlayerData data = getPlayerData(player);
-        int offlineCookies = data.getOfflineCookies();
+        long offlineCookies = data.getOfflineCookies();
 
         ItemStack rewardItem;
         if (offlineCookies > 0) {
@@ -485,7 +487,6 @@ public class CookieClicker implements Listener {
                         }
                         break;
 
-
                     case STONECUTTER:
                         if (data.getMineLevel() >= 20) {
                             if (data.upgradeFactory()) {
@@ -508,7 +509,7 @@ public class CookieClicker implements Listener {
 
                     case MINECART:
                     case CHEST_MINECART:
-                        int offlineCookies = data.getOfflineCookies();
+                        long offlineCookies = data.getOfflineCookies();
 
                         if (offlineCookies > 0) {
                             double chance = Math.random();
@@ -519,7 +520,8 @@ public class CookieClicker implements Listener {
                             }
 
                             data.setCookieCount(data.getCookieCount() + offlineCookies);
-                            data.updateRanking();
+                            data.setAllTimeCookies(data.getAllTimeCookies() + offlineCookies); // allTimeCookiesを更新
+                            data.updateRanking(); // ランキングを更新
                             player.sendMessage(ChatColor.GREEN + "You received " + data.formatNumber(offlineCookies) + " cookies from offline rewards!");
                             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
                             data.resetOfflineCookies();
@@ -528,7 +530,7 @@ public class CookieClicker implements Listener {
                             updateRankingItem(player);
                         } else {
                             player.sendMessage(ChatColor.RED + "No cookies gathered while offline.");
-                            player.playSound(player.getLocation(),Sound.BLOCK_ANVIL_PLACE, 1.0f, 1.0f);
+                            player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 1.0f, 1.0f);
                         }
                         break;
 
@@ -566,5 +568,3 @@ public class CookieClicker implements Listener {
         savePlayerData(player);
     }
 }
-
-//aa

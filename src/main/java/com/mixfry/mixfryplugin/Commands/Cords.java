@@ -1,5 +1,6 @@
-package com.mixfry.mixfryplugin;
+package com.mixfry.mixfryplugin.Commands;
 
+import com.mixfry.mixfryplugin.MixfryPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;

@@ -1,5 +1,9 @@
 package com.mixfry.mixfryplugin;
 
+import com.mixfry.mixfryplugin.Commands.Changelog;
+import com.mixfry.mixfryplugin.Commands.CookieClicker;
+import com.mixfry.mixfryplugin.Commands.Cords;
+import com.mixfry.mixfryplugin.Commands.Setting;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -23,6 +27,8 @@ public class MixfryPlugin extends JavaPlugin {
         ToolExtention.getInstance();
         RareDropAlert.getInstance();
         new ScoreBoard(this);
+        new CookieClicker();
+        new Changelog();
         cookieClicker = new CookieClicker();
         Setting setting = new Setting(this);
         getCommand("setting").setExecutor(setting);

@@ -1,5 +1,7 @@
-package com.mixfry.mixfryplugin;
+package com.mixfry.mixfryplugin.Commands;
 
+import com.mixfry.mixfryplugin.RareDropAlert;
+import com.mixfry.mixfryplugin.ToolExtention;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;

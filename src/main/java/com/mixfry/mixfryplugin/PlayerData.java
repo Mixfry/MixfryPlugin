@@ -17,8 +17,8 @@ public class PlayerData {
     private final UUID playerUUID;
     private final File dataFile;
     private FileConfiguration dataConfig;
-    private int cookieCount;
-    private int allTimeCookies;
+    private long cookieCount;
+    private long allTimeCookies;
     private int giantHandLevel;
     private int cookiesPerClick;
     private int grandmaLevel;
@@ -28,7 +28,7 @@ public class PlayerData {
     private int cookiesPerSecond;
     private long lastCloseTime;
     private long lastLogoutTime;
-    private int offlineCookies;
+    private long offlineCookies;
 
     public PlayerData(Player player) {
         this.player = player;
@@ -52,8 +52,8 @@ public class PlayerData {
             }
         }
         dataConfig = YamlConfiguration.loadConfiguration(dataFile);
-        cookieCount = dataConfig.getInt("cookieCount", 0);
-        allTimeCookies = dataConfig.getInt("allTimeCookies", 0);
+        cookieCount = dataConfig.getLong("cookieCount", 0);
+        allTimeCookies = dataConfig.getLong("allTimeCookies", 0);
         giantHandLevel = dataConfig.getInt("giantHandLevel", 1);
         cookiesPerClick = dataConfig.getInt("cookiesPerClick", 1);
         grandmaLevel = dataConfig.getInt("grandmaLevel", 1);
@@ -62,7 +62,7 @@ public class PlayerData {
         factoryLevel = dataConfig.getInt("factoryLevel", 0);
         cookiesPerSecond = dataConfig.getInt("cookiesPerSecond", 0);
         lastLogoutTime = dataConfig.getLong("lastLogoutTime", System.currentTimeMillis());
-        offlineCookies = dataConfig.getInt("offlineCookies", 0);
+        offlineCookies = dataConfig.getLong("offlineCookies", 0);
     }
 
     public void saveData() {
@@ -85,11 +85,11 @@ public class PlayerData {
         }
     }
 
-    public int getCookieCount() {
+    public long getCookieCount() {
         return cookieCount;
     }
 
-    public int getAllTimeCookies() {
+    public long getAllTimeCookies() {
         return allTimeCookies;
     }
 
@@ -129,7 +129,7 @@ public class PlayerData {
         return lastLogoutTime;
     }
 
-    public int getOfflineCookies() {
+    public long getOfflineCookies() {
         return offlineCookies;
     }
 
@@ -145,8 +145,12 @@ public class PlayerData {
         this.lastLogoutTime = lastLogoutTime;
     }
 
-    public void setCookieCount(int cookieCount) {
+    public void setCookieCount(long cookieCount) {
         this.cookieCount = cookieCount;
+    }
+
+    public void setAllTimeCookies(long allTimeCookies) {
+        this.allTimeCookies = allTimeCookies;
     }
 
     public void setFarmLevel(int farmLevel) {
@@ -163,7 +167,7 @@ public class PlayerData {
     }
 
     public boolean upgradeGiantHand() {
-        int cost = (int) (25 * Math.pow(1.25, giantHandLevel - 1));
+        long cost = calculateGiantHandCost(giantHandLevel);
         if (cookieCount >= cost) {
             cookieCount -= cost;
             giantHandLevel++;
@@ -174,7 +178,7 @@ public class PlayerData {
     }
 
     public boolean upgradeGrandma() {
-        int cost = calculateGrandmaCost(grandmaLevel);
+        long cost = calculateGrandmaCost(grandmaLevel);
         if (cookieCount >= cost) {
             cookieCount -= cost;
             grandmaLevel++;
@@ -185,7 +189,7 @@ public class PlayerData {
     }
 
     public boolean upgradeFarm() {
-        int cost = calculateFarmCost(farmLevel);
+        long cost = calculateFarmCost(farmLevel);
         if (cookieCount >= cost) {
             cookieCount -= cost;
             farmLevel++;
@@ -196,7 +200,7 @@ public class PlayerData {
     }
 
     public boolean upgradeMine() {
-        int cost = calculateMineCost(mineLevel);
+        long cost = calculateMineCost(mineLevel);
         if (cookieCount >= cost) {
             cookieCount -= cost;
             mineLevel++;
@@ -207,7 +211,7 @@ public class PlayerData {
     }
 
     public boolean upgradeFactory() {
-        int cost = calculateFactoryCost(factoryLevel);
+        long cost = calculateFactoryCost(factoryLevel);
         if (cookieCount >= cost) {
             cookieCount -= cost;
             factoryLevel++;
@@ -217,20 +221,24 @@ public class PlayerData {
         return false;
     }
 
-    private int calculateGrandmaCost(int level) {
-        return (int) (50 * Math.pow(1.1, level) + 10 * level);
+    private long calculateGiantHandCost(int level) {
+        return (long) (25 * Math.pow(1.25, level - 1));
     }
 
-    private int calculateFarmCost(int level) {
-        return (int) (1400 * Math.pow(1.1, level) + 10 * level);
+    private long calculateGrandmaCost(int level) {
+        return (long) (50 * Math.pow(1.1, level) + 10 * level);
     }
 
-    private int calculateMineCost(int level) {
-        return (int) (3200 * Math.pow(1.1, level) + 10 * level);
+    private long calculateFarmCost(int level) {
+        return (long) (1400 * Math.pow(1.1, level) + 10 * level);
     }
 
-    private int calculateFactoryCost(int level) {
-        return (int) (5700 * Math.pow(1.1, level) + 10 * level);
+    private long calculateMineCost(int level) {
+        return (long) (3200 * Math.pow(1.1, level) + 10 * level);
+    }
+
+    private long calculateFactoryCost(int level) {
+        return (long) (5700 * Math.pow(1.1, level) + 10 * level);
     }
 
     public void incrementCookiesPerSecond() {
@@ -246,7 +254,7 @@ public class PlayerData {
         long currentTime = System.currentTimeMillis();
         long elapsedTime = currentTime - lastCloseTime;
         int secondsElapsed = (int) (elapsedTime / 1000);
-        int offlineCookies = secondsElapsed * cookiesPerSecond;
+        long offlineCookies = secondsElapsed * cookiesPerSecond;
         cookieCount += offlineCookies;
         allTimeCookies += offlineCookies;
     }
@@ -272,7 +280,7 @@ public class PlayerData {
         lastLogoutTime = currentTime;
     }
 
-    public String formatNumber(int number) {
+    public String formatNumber(long number) {
         if (number >= 1_000_000_000_000_000_000L) {
             return String.format("%.2fQi", number / 1_000_000_000_000_000_000.0);
         } else if (number >= 1_000_000_000_000_000L) {
