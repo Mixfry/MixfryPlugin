@@ -1,9 +1,10 @@
 package com.mixfry.mixfryplugin;
 
+import com.mixfry.mixfryplugin.Commands.Menu;
+import com.mixfry.mixfryplugin.Commands.Setting;
 import com.mixfry.mixfryplugin.Commands.Changelog;
 import com.mixfry.mixfryplugin.Commands.CookieClicker;
 import com.mixfry.mixfryplugin.Commands.Cords;
-import com.mixfry.mixfryplugin.Commands.Setting;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -23,6 +24,7 @@ public class MixfryPlugin extends JavaPlugin {
     public void onEnable() {
         instance = this;
         DeathPoint.getInstance();
+        new Menu(this);
         new Cords();
         new ScoreBoard(this);
         new CookieClicker();
@@ -31,6 +33,7 @@ public class MixfryPlugin extends JavaPlugin {
         ToolExtention.getInstance();
         RareDropAlert.getInstance();
         cookieClicker = new CookieClicker();
+        MineCombo.getInstance().loadSettings();
         Setting setting = new Setting(this);
         getCommand("setting").setExecutor(setting);
         getServer().getPluginManager().registerEvents(setting, this);

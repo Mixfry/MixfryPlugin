@@ -3,6 +3,10 @@ version: '1.1.1'
 main: com.mixfry.mixfryplugin.MixfryPlugin
 api-version: '1.16'
 commands:
+  menu:
+    description: メニューを開きます
+  setting:
+      description: セッティングメニューを開きます
   cookie_clicker:
     description: クッキークリッカーのメニューを開く
     aliases: [ cc ]
@@ -10,5 +14,3 @@ commands:
     description: 現在の座標を表示する
   changelog:
     description: プラグインの変更点を表示します
-  setting:
-    description: セッティングメニューを開きます

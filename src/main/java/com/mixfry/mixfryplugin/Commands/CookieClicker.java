@@ -426,18 +426,21 @@ public class CookieClicker implements Listener {
             PlayerData data = getPlayerData(player);
 
             if (event.getCurrentItem() != null) {
-                switch (event.getCurrentItem().getType()) {
+                Material itemType = event.getCurrentItem().getType();
+                boolean updateInventory = false;
+
+                switch (itemType) {
                     case COOKIE:
                         data.incrementCookieCount();
                         player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
-                        updateCookieItem(player);
+                        updateInventory = true;
                         break;
 
                     case GOLD_INGOT:
                         if (data.upgradeGiantHand()) {
                             player.sendMessage(ChatColor.GREEN + "Giant Hand upgraded to " + getRomanNumerals(data.getGiantHandLevel()) + "!");
                             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
-                            updateGiantHandItem(player);
+                            updateInventory = true;
                         } else {
                             player.sendMessage(ChatColor.RED + "Not enough cookies to upgrade!");
                             player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
@@ -448,8 +451,7 @@ public class CookieClicker implements Listener {
                         if (data.upgradeGrandma()) {
                             player.sendMessage(ChatColor.GREEN + "Grandma upgraded to [" + data.getGrandmaLevel() + "]!");
                             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
-                            updateGrandmaItem(player);
-                            updateFarmItem(player);
+                            updateInventory = true;
                         } else {
                             player.sendMessage(ChatColor.RED + "Not enough cookies to upgrade!");
                             player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
@@ -461,8 +463,7 @@ public class CookieClicker implements Listener {
                             if (data.upgradeFarm()) {
                                 player.sendMessage(ChatColor.GREEN + "Farm upgraded to [" + data.getFarmLevel() + "]!");
                                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
-                                updateFarmItem(player);
-                                updateMineItem(player);
+                                updateInventory = true;
                             } else {
                                 player.sendMessage(ChatColor.RED + "Not enough cookies to upgrade!");
                                 player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
@@ -477,7 +478,7 @@ public class CookieClicker implements Listener {
                             if (data.upgradeMine()) {
                                 player.sendMessage(ChatColor.GREEN + "Mine upgraded to [" + data.getMineLevel() + "]!");
                                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
-                                updateMineItem(player);
+                                updateInventory = true;
                             } else {
                                 player.sendMessage(ChatColor.RED + "Not enough cookies to upgrade!");
                                 player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
@@ -492,7 +493,7 @@ public class CookieClicker implements Listener {
                             if (data.upgradeFactory()) {
                                 player.sendMessage(ChatColor.GREEN + "Factory upgraded to [" + data.getFactoryLevel() + "]!");
                                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
-                                updateFactoryItem(player);
+                                updateInventory = true;
                             } else {
                                 player.sendMessage(ChatColor.RED + "Not enough cookies to upgrade!");
                                 player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
@@ -526,8 +527,7 @@ public class CookieClicker implements Listener {
                             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
                             data.resetOfflineCookies();
                             savePlayerData(player);
-                            updateCookieItem(player);
-                            updateRankingItem(player);
+                            updateInventory = true;
                         } else {
                             player.sendMessage(ChatColor.RED + "No cookies gathered while offline.");
                             player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 1.0f, 1.0f);
@@ -537,8 +537,18 @@ public class CookieClicker implements Listener {
                     default:
                         break;
                 }
+
+                if (updateInventory) {
+                    updateCookieItem(player);
+                    updateGiantHandItem(player);
+                    updateGrandmaItem(player);
+                    updateFarmItem(player);
+                    updateMineItem(player);
+                    updateFactoryItem(player);
+                    updateRankingItem(player);
+                    updateOfflineRewardItem(player);
+                }
             }
-            updateOfflineRewardItem(player);
         }
     }
 

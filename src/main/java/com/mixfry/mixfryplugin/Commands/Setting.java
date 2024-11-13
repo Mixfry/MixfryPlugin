@@ -1,9 +1,7 @@
 package com.mixfry.mixfryplugin.Commands;
 
-import com.mixfry.mixfryplugin.DeathPoint;
-import com.mixfry.mixfryplugin.MineCombo;
-import com.mixfry.mixfryplugin.RareDropAlert;
-import com.mixfry.mixfryplugin.ToolExtention;
+import com.mixfry.mixfryplugin.*;
+import com.mixfry.mixfryplugin.ComboCosmetics.ComboSound;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -47,7 +45,7 @@ public class Setting implements Listener, CommandExecutor {
     }
 
     public void openSettingInventory(Player player) {
-        Inventory inventory = Bukkit.createInventory(null, 18, "設定");
+        Inventory inventory = Bukkit.createInventory(null, 27, "設定");
 
         // Slot0: 耐久値警告機能のアイコン
         ItemStack durabilityWarning = new ItemStack(Material.IRON_PICKAXE);
@@ -80,13 +78,6 @@ public class Setting implements Listener, CommandExecutor {
         mineComboMeta.setDisplayName(ChatColor.GOLD + "採掘コンボ");
         mineComboNotification.setItemMeta(mineComboMeta);
         inventory.setItem(3, mineComboNotification);
-
-        // Slot4: コンボ音変更のアイコン
-        ItemStack comboSoundChange = new ItemStack(Material.BEACON);
-        ItemMeta comboSoundChangeMeta = comboSoundChange.getItemMeta();
-        comboSoundChangeMeta.setDisplayName(ChatColor.GOLD + "採掘コンボ音変更");
-        comboSoundChange.setItemMeta(comboSoundChangeMeta);
-        inventory.setItem(4, comboSoundChange);
 
         // 設定を読み込む
         FileConfiguration config = loadPlayerConfig(player);
@@ -127,12 +118,12 @@ public class Setting implements Listener, CommandExecutor {
         mineComboSetting.setItemMeta(mineComboSettingMeta);
         inventory.setItem(12, mineComboSetting);
 
-        // Slot13: コンボ音変更の音符ブロック
-        ItemStack noteBlock = new ItemStack(Material.NOTE_BLOCK);
-        ItemMeta noteBlockMeta = noteBlock.getItemMeta();
-        noteBlockMeta.setDisplayName(ChatColor.AQUA + "コンボ音変更");
-        noteBlock.setItemMeta(noteBlockMeta);
-        inventory.setItem(13, noteBlock);
+        // Slot18: 戻るの矢
+        ItemStack backArrow = new ItemStack(Material.ARROW);
+        ItemMeta backArrowMeta = backArrow.getItemMeta();
+        backArrowMeta.setDisplayName(ChatColor.RED + "戻る");
+        backArrow.setItemMeta(backArrowMeta);
+        inventory.setItem(18, backArrow);
 
         player.openInventory(inventory);
     }
@@ -157,7 +148,11 @@ public class Setting implements Listener, CommandExecutor {
                 clickedItem.setItemMeta(meta);
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_HARP, 1.0f, 1.0f);
             } else if (clickedItem.getType() == Material.NOTE_BLOCK && clickedItem.getItemMeta().getDisplayName().equals(ChatColor.AQUA + "コンボ音変更")) {
-                openComboSoundSettingInventory(player);
+                ComboSound comboSound = new ComboSound((MixfryPlugin) plugin);
+                comboSound.openComboSoundSettingInventory(player);
+            } else if (clickedItem.getType() == Material.ARROW && clickedItem.getItemMeta().getDisplayName().equals(ChatColor.RED + "戻る")) {
+                player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN , 1.0f, 1.0f);
+                new Menu((MixfryPlugin) plugin).openMenu(player);
             }
         } else if (event.getView().getTitle().equals("コンボ音設定")) {
             event.setCancelled(true);
@@ -166,11 +161,12 @@ public class Setting implements Listener, CommandExecutor {
 
             Player player = (Player) event.getWhoClicked();
             if (clickedItem.getType() == Material.ARROW && clickedItem.getItemMeta().getDisplayName().equals(ChatColor.RED + "戻る")) {
+                player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN , 1.0f, 1.0f);
                 openSettingInventory(player);
             } else {
                 Sound sound = null;
                 switch (clickedItem.getType()) {
-                    case MINECART:
+                    case BARRIER:
                         sound = null;
                         break;
                     case ICE:
@@ -220,6 +216,17 @@ public class Setting implements Listener, CommandExecutor {
         }
     }
 
+    private void saveComboSoundSetting(Player player, Sound sound) {
+        File configFile = new File(plugin.getDataFolder(), player.getName() + "_config.yml");
+        FileConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+        config.set("comboSound", sound == null ? "null" : sound.name());
+        try {
+            config.save(configFile);
+        } catch (IOException e) {
+            plugin.getLogger().log(Level.SEVERE, "コンボ音設定の保存中にエラーが発生しました。", e);
+        }
+    }
+
     private void saveSettings(Player player, boolean durabilityWarning, boolean rareDropNotification, boolean deathPointNotification, boolean mineComboEnabled) {
         File configFile = new File(plugin.getDataFolder(), player.getName() + "_config.yml");
         FileConfiguration config = YamlConfiguration.loadConfiguration(configFile);
@@ -262,6 +269,24 @@ public class Setting implements Listener, CommandExecutor {
         return true;
     }
 
+    public void loadSettings() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            File configFile = new File(plugin.getDataFolder(), player.getName() + "_config.yml");
+            if (configFile.exists()) {
+                FileConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+                boolean durabilityWarning = config.getBoolean("durabilityWarning", true);
+                boolean rareDropNotification = config.getBoolean("rareDropNotification", true);
+                boolean deathPointNotification = config.getBoolean("deathPointNotification", true);
+                boolean mineComboEnabled = config.getBoolean("mineCombo", true);
+
+                toolExtention.setDurabilityWarningEnabled(durabilityWarning);
+                rareDropAlert.setRareDropNotificationEnabled(rareDropNotification);
+                deathPoint.setDeathPointNotificationEnabled(deathPointNotification);
+                mineCombo.setMineComboEnabled(mineComboEnabled);
+            }
+        }
+    }
+
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
@@ -278,94 +303,19 @@ public class Setting implements Listener, CommandExecutor {
             } catch (IOException e) {
                 plugin.getLogger().log(Level.SEVERE, "設定ファイルの作成中にエラーが発生しました。", e);
             }
-        }
-    }
+        } else {
+            // ymlの読み込み 多分これでいける
+            FileConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+            boolean durabilityWarning = config.getBoolean("durabilityWarning", true);
+            boolean rareDropNotification = config.getBoolean("rareDropNotification", true);
+            boolean deathPointNotification = config.getBoolean("deathPointNotification", true);
+            boolean mineComboEnabled = config.getBoolean("mineCombo", true);
 
-    public void openComboSoundSettingInventory(Player player) {
-        Inventory comboSoundInventory = Bukkit.createInventory(null, 18, "コンボ音設定");
-
-        // Slot0: 無音のトロッコ
-        ItemStack noSound = new ItemStack(Material.MINECART);
-        ItemMeta noSoundMeta = noSound.getItemMeta();
-        noSoundMeta.setDisplayName(ChatColor.WHITE + "無音");
-        noSound.setItemMeta(noSoundMeta);
-        comboSoundInventory.setItem(0, noSound);
-
-        // Slot1: チャイムの氷
-        ItemStack chime = new ItemStack(Material.ICE);
-        ItemMeta chimeMeta = chime.getItemMeta();
-        chimeMeta.setDisplayName(ChatColor.AQUA + "チャイム");
-        chimeMeta.setLore(Collections.singletonList(ChatColor.GRAY + "デフォルト音"));
-        chime.setItemMeta(chimeMeta);
-        comboSoundInventory.setItem(1, chime);
-
-        // Slot2: カウベルのソウルサンド
-        ItemStack cowbell = new ItemStack(Material.SOUL_SAND);
-        ItemMeta cowbellMeta = cowbell.getItemMeta();
-        cowbellMeta.setDisplayName(ChatColor.GOLD + "カウベル");
-        cowbell.setItemMeta(cowbellMeta);
-        comboSoundInventory.setItem(2, cowbell);
-
-        // Slot3: 木琴の骨ブロック
-        ItemStack xylophone = new ItemStack(Material.BONE_BLOCK);
-        ItemMeta xylophoneMeta = xylophone.getItemMeta();
-        xylophoneMeta.setDisplayName(ChatColor.YELLOW + "木琴");
-        xylophone.setItemMeta(xylophoneMeta);
-        comboSoundInventory.setItem(3, xylophone);
-
-        // Slot4: フルートの粘土
-        ItemStack flute = new ItemStack(Material.CLAY);
-        ItemMeta fluteMeta = flute.getItemMeta();
-        fluteMeta.setDisplayName(ChatColor.BLUE + "フルート");
-        flute.setItemMeta(fluteMeta);
-        comboSoundInventory.setItem(4, flute);
-
-        // Slot5: 電子音のエメラルドブロック
-        ItemStack bit = new ItemStack(Material.EMERALD_BLOCK);
-        ItemMeta bitMeta = bit.getItemMeta();
-        bitMeta.setDisplayName(ChatColor.GREEN + "電子音");
-        bit.setItemMeta(bitMeta);
-        comboSoundInventory.setItem(5, bit);
-
-        // Slot6: 鉄琴の鉄ブロック
-        ItemStack ironXylophone = new ItemStack(Material.IRON_BLOCK);
-        ItemMeta ironXylophoneMeta = ironXylophone.getItemMeta();
-        ironXylophoneMeta.setDisplayName(ChatColor.GRAY + "鉄琴");
-        ironXylophone.setItemMeta(ironXylophoneMeta);
-        comboSoundInventory.setItem(6, ironXylophone);
-
-        // Slot7: ベルの金ブロック
-        ItemStack bell = new ItemStack(Material.GOLD_BLOCK);
-        ItemMeta bellMeta = bell.getItemMeta();
-        bellMeta.setDisplayName(ChatColor.GOLD + "ベル");
-        bell.setItemMeta(bellMeta);
-        comboSoundInventory.setItem(7, bell);
-
-        // Slot8: バスドラムの石
-        ItemStack bassDrum = new ItemStack(Material.STONE);
-        ItemMeta bassDrumMeta = bassDrum.getItemMeta();
-        bassDrumMeta.setDisplayName(ChatColor.DARK_GRAY + "バスドラム");
-        bassDrum.setItemMeta(bassDrumMeta);
-        comboSoundInventory.setItem(8, bassDrum);
-
-        // Slot13: 戻るの矢
-        ItemStack backArrow = new ItemStack(Material.ARROW);
-        ItemMeta backArrowMeta = backArrow.getItemMeta();
-        backArrowMeta.setDisplayName(ChatColor.RED + "戻る");
-        backArrow.setItemMeta(backArrowMeta);
-        comboSoundInventory.setItem(13, backArrow);
-
-        player.openInventory(comboSoundInventory);
-    }
-
-    private void saveComboSoundSetting(Player player, Sound sound) {
-        File configFile = new File(plugin.getDataFolder(), player.getName() + "_config.yml");
-        FileConfiguration config = YamlConfiguration.loadConfiguration(configFile);
-        config.set("comboSound", sound == null ? "null" : sound.name());
-        try {
-            config.save(configFile);
-        } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "コンボ音設定の保存中にエラーが発生しました。", e);
+            // 設定を反映 これでうまくいってくれ頼む
+            toolExtention.setDurabilityWarningEnabled(durabilityWarning);
+            rareDropAlert.setRareDropNotificationEnabled(rareDropNotification);
+            deathPoint.setDeathPointNotificationEnabled(deathPointNotification);
+            mineCombo.setMineComboEnabled(mineComboEnabled);
         }
     }
 }
