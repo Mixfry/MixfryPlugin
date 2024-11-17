@@ -1,5 +1,5 @@
 name: MixfryPlugin
-version: '1.1.1'
+version: '1.1.2'
 main: com.mixfry.mixfryplugin.MixfryPlugin
 api-version: '1.16'
 commands:
@@ -14,3 +14,9 @@ commands:
     description: 現在の座標を表示する
   changelog:
     description: プラグインの変更点を表示します
+  reset_entity:
+    description: バグで残ってしまったコンボの防具立てとボスバーを消去します
+  MineCombo:
+    description: コンボポイントを設定するコマンド
+    usage: Mixfryしか使えません
+    tab-completer: com.mixfry.mixfryplugin.Commands.MineComboDebug
