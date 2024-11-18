@@ -1,4 +1,4 @@
-package com.mixfry.mixfryplugin.Minecombo.Cosmetics;
+package com.mixfry.mixfryplugin.Minecombo.Cosmetics.ComboParticle;
 
 import com.mixfry.mixfryplugin.MixfryPlugin;
 import org.bukkit.Bukkit;
@@ -7,8 +7,10 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -111,6 +113,22 @@ public class ComboParticle {
         backArrowMeta.setDisplayName(ChatColor.RED + "戻る");
         backArrow.setItemMeta(backArrowMeta);
         comboParticleInventory.setItem(9, backArrow);
+
+        ItemStack selectedItem = getComboParticleItem(player);
+        if (selectedItem != null) {
+            ItemMeta selectedMeta = selectedItem.getItemMeta();
+            selectedMeta.addEnchant(Enchantment.LUCK, 1, true);
+            selectedMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            selectedItem.setItemMeta(selectedMeta);
+
+            for (int i = 0; i < comboParticleInventory.getSize(); i++) {
+                ItemStack item = comboParticleInventory.getItem(i);
+                if (item != null && item.getType() == selectedItem.getType()) {
+                    comboParticleInventory.setItem(i, selectedItem);
+                    break;
+                }
+            }
+        }
 
         player.openInventory(comboParticleInventory);
     }

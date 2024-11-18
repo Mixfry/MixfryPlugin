@@ -1,12 +1,10 @@
-package com.mixfry.mixfryplugin.Minecombo.Cosmetics;
+package com.mixfry.mixfryplugin.Minecombo.Cosmetics.ComboSound;
 
 import com.mixfry.mixfryplugin.MixfryPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -14,98 +12,16 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Collections;
-import java.util.logging.Level;
 
 public class ComboSound {
 
     private final MixfryPlugin plugin;
+    private final SaveSound saveSound;
 
     public ComboSound(MixfryPlugin plugin) {
         this.plugin = plugin;
-    }
-
-    public Sound ComboSoundIcon(Material material) {
-        switch (material) {
-            case BARRIER:
-                return null;
-            case ICE:
-                return Sound.BLOCK_NOTE_BLOCK_CHIME;
-            case SOUL_SAND:
-                return Sound.BLOCK_NOTE_BLOCK_COW_BELL;
-            case BONE_BLOCK:
-                return Sound.BLOCK_NOTE_BLOCK_XYLOPHONE;
-            case CLAY:
-                return Sound.BLOCK_NOTE_BLOCK_FLUTE;
-            case EMERALD_BLOCK:
-                return Sound.BLOCK_NOTE_BLOCK_BIT;
-            case IRON_BLOCK:
-                return Sound.BLOCK_NOTE_BLOCK_IRON_XYLOPHONE;
-            case GOLD_BLOCK:
-                return Sound.BLOCK_NOTE_BLOCK_BELL;
-            case STONE:
-                return Sound.BLOCK_NOTE_BLOCK_BASEDRUM;
-            default:
-                return null;
-        }
-    }
-
-    public ItemStack getComboSoundItem(Player player) {
-        File configFile = new File(plugin.getDataFolder(), player.getName() + "_config.yml");
-        FileConfiguration config = YamlConfiguration.loadConfiguration(configFile);
-        String soundName = config.getString("comboSound", "null");
-
-        Material material;
-        String displayName;
-
-        switch (soundName) {
-            case "BLOCK_NOTE_BLOCK_CHIME":
-                material = Material.ICE;
-                displayName = ChatColor.AQUA + "チャイム";
-                break;
-            case "BLOCK_NOTE_BLOCK_COW_BELL":
-                material = Material.SOUL_SAND;
-                displayName = ChatColor.GOLD + "カウベル";
-                break;
-            case "BLOCK_NOTE_BLOCK_XYLOPHONE":
-                material = Material.BONE_BLOCK;
-                displayName = ChatColor.YELLOW + "木琴";
-                break;
-            case "BLOCK_NOTE_BLOCK_FLUTE":
-                material = Material.CLAY;
-                displayName = ChatColor.BLUE + "フルート";
-                break;
-            case "BLOCK_NOTE_BLOCK_BIT":
-                material = Material.EMERALD_BLOCK;
-                displayName = ChatColor.GREEN + "電子音";
-                break;
-            case "BLOCK_NOTE_BLOCK_IRON_XYLOPHONE":
-                material = Material.IRON_BLOCK;
-                displayName = ChatColor.GRAY + "鉄琴";
-                break;
-            case "BLOCK_NOTE_BLOCK_BELL":
-                material = Material.GOLD_BLOCK;
-                displayName = ChatColor.GOLD + "ベル";
-                break;
-            case "BLOCK_NOTE_BLOCK_BASEDRUM":
-                material = Material.STONE;
-                displayName = ChatColor.DARK_GRAY + "バスドラム";
-                break;
-            default:
-                material = Material.BARRIER;
-                displayName = ChatColor.WHITE + "無音";
-                break;
-        }
-
-        ItemStack comboSoundItem = new ItemStack(material);
-        ItemMeta comboSoundMeta = comboSoundItem.getItemMeta();
-        comboSoundMeta.setDisplayName(displayName);
-        comboSoundMeta.setLore(Collections.singletonList(ChatColor.GRAY + "コンボ音設定"));
-        comboSoundItem.setItemMeta(comboSoundMeta);
-
-        return comboSoundItem;
+        this.saveSound = new SaveSound(plugin);
     }
 
     public void openComboSoundSettingInventory(Player player) {
@@ -182,7 +98,7 @@ public class ComboSound {
         backArrow.setItemMeta(backArrowMeta);
         comboSoundInventory.setItem(9, backArrow);
 
-        ItemStack selectedItem = getComboSoundItem(player);
+        ItemStack selectedItem = GetSound.getComboSoundItem(plugin, player);
         if (selectedItem != null) {
             ItemMeta selectedMeta = selectedItem.getItemMeta();
             selectedMeta.addEnchant(Enchantment.LUCK, 1, true);
@@ -202,13 +118,6 @@ public class ComboSound {
     }
 
     public void saveComboSoundSetting(Player player, Sound sound) {
-        File configFile = new File(plugin.getDataFolder(), player.getName() + "_config.yml");
-        FileConfiguration config = YamlConfiguration.loadConfiguration(configFile);
-        config.set("comboSound", sound == null ? "null" : sound.name());
-        try {
-            config.save(configFile);
-        } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "コンボ音設定の保存中にエラーが発生しました。", e);
-        }
+        saveSound.saveComboSoundSetting(player, sound);
     }
 }

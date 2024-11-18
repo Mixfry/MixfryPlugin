@@ -2,9 +2,11 @@ package com.mixfry.mixfryplugin.Minecombo;
 
 import com.mixfry.mixfryplugin.Menu.Menu;
 import com.mixfry.mixfryplugin.Minecombo.Cosmetics.ComboDisplay;
-import com.mixfry.mixfryplugin.Minecombo.Cosmetics.ComboParticle;
+import com.mixfry.mixfryplugin.Minecombo.Cosmetics.ComboParticle.ComboParticle;
 import com.mixfry.mixfryplugin.Minecombo.Cosmetics.ComboPeriodEffect;
-import com.mixfry.mixfryplugin.Minecombo.Cosmetics.ComboSound;
+import com.mixfry.mixfryplugin.Minecombo.Cosmetics.ComboSound.ComboSound;
+import com.mixfry.mixfryplugin.Minecombo.Cosmetics.ComboSound.SetSoundIcon;
+import com.mixfry.mixfryplugin.Minecombo.Cosmetics.ComboSound.GetSound;
 import com.mixfry.mixfryplugin.MixfryPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -136,7 +138,7 @@ public class MineComboShop implements Listener {
         comboShop.setItem(19, defaultItem1);
 
         // slot21: コンボ音設定
-        ItemStack comboSoundItem = comboSound.getComboSoundItem(player);
+        ItemStack comboSoundItem = GetSound.getComboSoundItem(plugin, player);
         comboShop.setItem(21, comboSoundItem);
 
         // slot23: コンボパーティクル設定
@@ -209,7 +211,7 @@ public class MineComboShop implements Listener {
             if (clickedItem.getType() == Material.ARROW && clickedItem.getItemMeta().getDisplayName().equals(ChatColor.RED + "戻る")) {
                 openComboShop(player);
             } else {
-                Sound sound = comboSound.ComboSoundIcon(clickedItem.getType());
+                Sound sound = SetSoundIcon.ComboSoundIcon(clickedItem.getType());
                 if (sound != null || clickedItem.getType() == Material.BARRIER) {
                     comboSound.saveComboSoundSetting(player, sound);
 
@@ -233,6 +235,19 @@ public class MineComboShop implements Listener {
             } else {
                 Particle particle = comboParticle.ComboParticleIcon(clickedItem.getType());
                 comboParticle.saveComboParticleSetting(player, particle);
+
+                for (ItemStack item : event.getInventory().getContents()) {
+                    if (item != null && item.containsEnchantment(Enchantment.LUCK)) {
+                        ItemMeta itemMeta = item.getItemMeta();
+                        itemMeta.removeEnchant(Enchantment.LUCK);
+                        item.setItemMeta(itemMeta);
+                    }
+                }
+
+                ItemMeta clickedMeta = clickedItem.getItemMeta();
+                clickedMeta.addEnchant(Enchantment.LUCK, 1, true);
+                clickedMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                clickedItem.setItemMeta(clickedMeta);
             }
         } else if (event.getView().getTitle().equals("コンボの見た目設定")) {
             if (clickedItem.getType() == Material.ARROW && clickedItem.getItemMeta().getDisplayName().equals(ChatColor.RED + "戻る")) {

@@ -4,7 +4,7 @@ import com.mixfry.mixfryplugin.*;
 import com.mixfry.mixfryplugin.Function.DeathPoint;
 import com.mixfry.mixfryplugin.Function.RareDropAlert;
 import com.mixfry.mixfryplugin.Function.ToolExtention;
-import com.mixfry.mixfryplugin.Minecombo.Cosmetics.ComboSound;
+import com.mixfry.mixfryplugin.Minecombo.Cosmetics.ComboSound.ComboSound;
 import com.mixfry.mixfryplugin.Minecombo.MineCombo;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
