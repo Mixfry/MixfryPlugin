@@ -44,9 +44,6 @@ public class RareDropAlert implements Listener {
     }
 
     private void initializeRareDrops() {
-        rareDrops.put(Material.IRON_INGOT, 0.025); //Zombie 2.5%
-        rareDrops.put(Material.CARROT, 0.025); //Zombie 2.5%
-        rareDrops.put(Material.POTATO, 0.025); //Zombie 2.5%
         rareDrops.put(Material.WITHER_SKELETON_SKULL, 0.025); //Wither Skeleton 2.5%
         rareDrops.put(Material.RABBIT_FOOT, 0.1); //Rabbit 10%
         rareDrops.put(Material.BONE_MEAL, 0.05); //Fish 5%
